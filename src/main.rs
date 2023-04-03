@@ -1,6 +1,9 @@
-use sdl2::event::Event;
+use level::GameResult;
+use sdl2::{event::Event, render::{WindowCanvas, TextureCreator}, video::WindowContext};
 
 extern crate sdl2;
+
+mod level;
 
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
@@ -19,15 +22,23 @@ fn main() -> Result<(), String> {
     .build()
     .unwrap();
 
-    canvas.present();
+    let mut texture_creator = canvas.texture_creator(); 
 
     let mut event_pump = sdl_context.event_pump()?;
+
+    canvas.present();
     'running: loop {
-        for event in event_pump.poll_iter() {
-            match event {
-                Event::Quit {..} => { break 'running }
-                _ => {}
-            }
+        // for event in event_pump.poll_iter() {
+        //     match event {
+        //         Event::Quit {..} => { break 'running }
+        //         _ => {}
+        //     }
+        // }
+
+        let game_result = level::play_level(&mut canvas, &mut texture_creator, &mut event_pump, "1");
+
+        if game_result == GameResult::Quit {
+            break 'running;
         }
     }
 
