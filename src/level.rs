@@ -71,33 +71,20 @@ pub fn play_level(
         canvas.set_draw_color(Color::BLACK);
         canvas.clear();
 
-        for i in 0..level.tilemap.len() {
-            for j in 0..level.tilemap[i].len() {
-                if i % 2 == 0 {
+        // draw floor tiles
+        for row in 0..level.tilemap.len() {
+            for col in 0..level.tilemap[row].len() {
+                if level.tilemap[row][col] == 1 {
                     canvas.copy(
                         &img_floor, 
-                        None, 
+                        None,
                         Rect::new(
-                            100 + (((i+1) as i32))*(28/2)*scale as i32,
-                            100 + (((j+1) as i32))*(19/2 + 5)*scale as i32,
-                            28 * scale, 
-                            19 * scale,
+                            400 - 14 - (row as i32)*14*scale + (col as i32)*14*scale, 
+                            (row as i32)*7*scale + (col as i32)*7*scale, 
+                            28 * (scale as u32), 
+                            19 * (scale as u32),
                         )
-                    )
-                    .unwrap();
-                }
-                else {
-                    canvas.copy(
-                        &img_floor, 
-                        None, 
-                        Rect::new(
-                            100 + ((i as i32))*(28/2)*scale as i32 + 40,  
-                            100 + ((j as i32))*(19/2 + 5)*scale as i32 + 20, 
-                            28 * scale, 
-                            19 * scale,
-                        )
-                    )
-                    .unwrap();
+                    ).unwrap();
                 }
             }
         }
