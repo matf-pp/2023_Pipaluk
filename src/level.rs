@@ -8,7 +8,7 @@ use sdl2::video::WindowContext;
 use sdl2::rect::Rect;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::mouse::Cursor;
+use sdl2::mouse::{Cursor, SystemCursor};
 
 const TILEMAP_WIDTH: i32 = 100;
 const TILEMAP_HEIGHT: i32 = 100;
@@ -44,6 +44,9 @@ pub fn play_level(
 ) -> GameResult {
     let level = load_level("resources/levels/".to_string() + name + ".json");
 
+    let cursor = Cursor::from_system(SystemCursor::Crosshair).unwrap();
+    cursor.set();
+    
     /*for row in &level.tilemap {
         for cell in row {
             print!("{}", cell);
@@ -65,6 +68,9 @@ pub fn play_level(
             match event {
                 Event::Quit {..}
                 | Event::KeyDown {keycode: Some(Keycode::Escape), ..} => { return GameResult::Quit },
+                Event::MouseButtonDown {x, y, ..}
+                | Event::MouseButtonUp {x, y, ..} => {println!("Mouse click position: ({}, {})", x, y)},
+                Event::MouseMotion {x, y, ..} => {println!("Mouse position: ({}, {})", x, y)}
                 _ => {}
             }
         }
