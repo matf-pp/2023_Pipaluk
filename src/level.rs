@@ -8,24 +8,22 @@ use sdl2::video::WindowContext;
 use sdl2::rect::Rect;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::mouse::{Cursor, SystemCursor};
+use sdl2::mouse::{Cursor, SystemCursor, MouseState};
 
-const TILEMAP_WIDTH: i32 = 100;
-const TILEMAP_HEIGHT: i32 = 100;
-const TILE_OFFSET: i32 = 1;
+use crate::map::{self, TileType};
 
 extern crate sdl2;
 
 #[derive(Serialize, Deserialize)]
-struct Level {
+struct LevelFile {
     name: String,
     tilemap: Vec<Vec<u32>>,
 }
 
-fn load_level(path: String) -> Level {
+fn load_level(path: String) -> LevelFile {
     println!("loading {path}!");
     let source = std::fs::read_to_string(path).expect("Failed to read level file");
-    let parsed_level: Level = serde_json::from_str(&source).expect("Failed to parse level file");
+    let parsed_level: LevelFile = serde_json::from_str(&source).expect("Failed to parse level file");
     return parsed_level;
 }
 
@@ -42,35 +40,38 @@ pub fn play_level(
     event_pump: &mut EventPump,
     name: &str
 ) -> GameResult {
-    let level = load_level("resources/levels/".to_string() + name + ".json");
-
     let cursor = Cursor::from_system(SystemCursor::Crosshair).unwrap();
     cursor.set();
-    
-    /*for row in &level.tilemap {
-        for cell in row {
-            print!("{}", cell);
-        }
-        println!();
-    }*/
-    //println!("{}", level.tilemap[0][0]);
 
-    // let level_name = &level["name"];
-    // let tilemap = &level["tilemap"];
-
-    let scale = 3;
+    let level = load_level("resources/levels/".to_string() + name + ".json");
+    let mut tilemap = map::Map::new();
+    tilemap.load(level.tilemap);
+    // tilemap.print();
 
     let mut img_floor = texture_creator.load_texture("resources/images/floor.png").unwrap();
     img_floor.set_blend_mode(BlendMode::Blend);
+    let mut img_highlight = texture_creator.load_texture("resources/images/highlight.png").unwrap();
+    img_highlight.set_blend_mode(BlendMode::Blend);
+    img_highlight.set_alpha_mod(128);
+
+    let (scale, (translation_x, translation_y)) = tilemap.get_scale_and_translation(canvas);
+    println!("scale={} tx={} ty={}", scale, translation_x, translation_y);
 
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..}
-                | Event::KeyDown {keycode: Some(Keycode::Escape), ..} => { return GameResult::Quit },
-                Event::MouseButtonDown {x, y, ..}
-                | Event::MouseButtonUp {x, y, ..} => {println!("Mouse click position: ({}, {})", x, y)},
-                Event::MouseMotion {x, y, ..} => {println!("Mouse position: ({}, {})", x, y)}
+                | Event::KeyDown {keycode: Some(Keycode::Escape), ..} => { return GameResult::Quit; },
+                Event::MouseButtonUp {x, y, ..} => {
+                    // println!("Mouse click position: ({}, {})", x, y);
+                    let (row, col) = tilemap.get_tile_index(
+                        (x - translation_x) / scale as i32, 
+                        (y - translation_y) / scale as i32
+                    );
+                },
+                Event::MouseMotion {x, y, ..} => {
+                    // println!("Mouse position: ({}, {})", x, y)
+                }
                 _ => {}
             }
         }
@@ -78,15 +79,16 @@ pub fn play_level(
         canvas.clear();
 
         // draw floor tiles
-        for row in 0..level.tilemap.len() {
-            for col in 0..level.tilemap[row].len() {
-                if level.tilemap[row][col] == 1 {
+        for row in 0..tilemap.tiles.len() {
+            for col in 0..tilemap.tiles[row].len() {
+                let (x, y) = tilemap.get_tile_pos(row, col);
+                if tilemap.tiles[row][col] == TileType::Floor {
                     canvas.copy(
                         &img_floor, 
                         None,
                         Rect::new(
-                            400 - 14 - (row as i32)*14*scale + (col as i32)*14*scale, 
-                            (row as i32)*7*scale + (col as i32)*7*scale, 
+                            x * scale as i32 + translation_x, 
+                            y * scale as i32 + translation_y, 
                             28 * (scale as u32), 
                             19 * (scale as u32),
                         )
@@ -94,7 +96,26 @@ pub fn play_level(
                 }
             }
         }
+                
+        let (row, col) = tilemap.get_tile_index(
+            (event_pump.mouse_state().x() - translation_x) / scale as i32, 
+            (event_pump.mouse_state().y() - translation_y) / scale as i32
+        );
+        let (x, y) = tilemap.get_tile_pos(row, col);
+        canvas.copy(
+            &img_highlight, 
+            None,
+            Rect::new(
+                x * scale as i32 + translation_x, 
+                y * scale as i32 + translation_y, 
+                28 * (scale as u32), 
+                15 * (scale as u32),
+            )
+        ).unwrap();
+
         canvas.present();
+
+        std::thread::sleep(std::time::Duration::from_millis(100));
     }
 
     return GameResult::Victory;

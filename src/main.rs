@@ -5,6 +5,7 @@ extern crate sdl2;
 
 mod level;
 mod menu;
+mod map;
 
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
@@ -39,8 +40,9 @@ fn main() -> Result<(), String> {
         if menu_result == MenuAction::Quit {
             break 'running;
         }
+        let menu_result = MenuAction::NewGame;
         if menu_result == MenuAction::NewGame {
-            let game_result = level::play_level(&mut canvas, &mut texture_creator, &mut event_pump, "1");
+            let game_result = level::play_level(&mut canvas, &mut texture_creator, &mut event_pump, "3");
             if game_result == GameResult::Quit {
                 break 'running;
             }
