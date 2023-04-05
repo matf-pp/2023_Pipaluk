@@ -17,6 +17,7 @@ fn main() -> Result<(), String> {
         600
     )
     .position_centered()
+    .resizable()
     .build()
     .unwrap();
 

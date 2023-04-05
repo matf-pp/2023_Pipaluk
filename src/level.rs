@@ -6,7 +6,7 @@ use sdl2::render::{ WindowCanvas, TextureCreator, Texture, BlendMode };
 use sdl2::image::{self, LoadTexture, InitFlag};
 use sdl2::video::WindowContext;
 use sdl2::rect::Rect;
-use sdl2::event::Event;
+use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::{Cursor, SystemCursor, MouseState};
 
@@ -54,7 +54,7 @@ pub fn play_level(
     img_highlight.set_blend_mode(BlendMode::Blend);
     img_highlight.set_alpha_mod(128);
 
-    let (scale, (translation_x, translation_y)) = tilemap.get_scale_and_translation(canvas);
+    let (mut scale, (mut translation_x, mut translation_y)) = tilemap.get_scale_and_translation(canvas);
     println!("scale={} tx={} ty={}", scale, translation_x, translation_y);
 
     'running: loop {
@@ -71,7 +71,12 @@ pub fn play_level(
                 },
                 Event::MouseMotion {x, y, ..} => {
                     // println!("Mouse position: ({}, {})", x, y)
-                }
+                },
+                Event::Window { win_event: WindowEvent::Resized(w, h), ..} => {
+                    (scale, (translation_x, translation_y)) = tilemap.get_scale_and_translation(canvas);
+                    scale = scale.max(1);
+                    println!("scale={} tx={} ty={}", scale, translation_x, translation_y);
+                },
                 _ => {}
             }
         }
@@ -96,22 +101,27 @@ pub fn play_level(
                 }
             }
         }
-                
-        let (row, col) = tilemap.get_tile_index(
-            (event_pump.mouse_state().x() - translation_x) / scale as i32, 
-            (event_pump.mouse_state().y() - translation_y) / scale as i32
-        );
-        let (x, y) = tilemap.get_tile_pos(row, col);
-        canvas.copy(
-            &img_highlight, 
-            None,
-            Rect::new(
-                x * scale as i32 + translation_x, 
-                y * scale as i32 + translation_y, 
-                28 * (scale as u32), 
-                15 * (scale as u32),
-            )
-        ).unwrap();
+
+        {   
+            let (x, y) = (event_pump.mouse_state().x(), event_pump.mouse_state().y());
+            let (row, col) = tilemap.get_tile_index(
+                (x - translation_x) / scale as i32, 
+                (y - translation_y) / scale as i32
+            );
+            if row>=0 && row<tilemap.tiles.len() && col>=0 && col<tilemap.tiles[row].len() && tilemap.tiles[row][col]==TileType::Floor {
+                let (x, y) = tilemap.get_tile_pos(row, col);
+                canvas.copy(
+                    &img_highlight, 
+                    None,
+                    Rect::new(
+                        x * scale as i32 + translation_x, 
+                        y * scale as i32 + translation_y, 
+                        28 * (scale as u32), 
+                        15 * (scale as u32),
+                    )
+                ).unwrap();
+            }
+        }
 
         canvas.present();
 
