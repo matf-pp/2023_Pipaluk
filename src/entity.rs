@@ -25,7 +25,7 @@ impl Search for Entity {
         for i in 0..map.len() {
             visited.push(vec![]);
             parent.push(vec![]);
-            for j in 0..map[0].len() {
+            for _ in 0..map[0].len() {
                 visited[i].push(false);
                 parent[i].push((-1, -1)); 
             } 

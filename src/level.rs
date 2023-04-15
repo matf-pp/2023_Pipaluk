@@ -1,14 +1,13 @@
-use serde_json::{Result, Value};
 use serde::{Deserialize, Serialize};
 use sdl2::EventPump;
 use sdl2::pixels::Color;
-use sdl2::render::{ WindowCanvas, TextureCreator, Texture, BlendMode };
-use sdl2::image::{self, LoadTexture, InitFlag};
+use sdl2::render::{ WindowCanvas, TextureCreator, BlendMode};
+use sdl2::image::LoadTexture;
 use sdl2::video::WindowContext;
 use sdl2::rect::Rect;
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
-use sdl2::mouse::{Cursor, SystemCursor, MouseState};
+use sdl2::mouse::{Cursor, SystemCursor};
 
 use crate::map::{self, TileType};
 use crate::entity::{Entity, Search};
@@ -31,8 +30,8 @@ fn load_level(path: String) -> LevelFile {
 #[derive(PartialEq)]
 pub enum GameResult {
     Quit,
-    Victory,
-    Defeat
+    _Victory,
+    _Defeat
 }
 
 pub fn play_level(
@@ -63,22 +62,12 @@ pub fn play_level(
     let (mut scale, (mut translation_x, mut translation_y)) = tilemap.get_scale_and_translation(canvas);
     println!("scale={} tx={} ty={}", scale, translation_x, translation_y);
 
-    'running: loop {
+    loop {
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..}
                 | Event::KeyDown {keycode: Some(Keycode::Escape), ..} => { return GameResult::Quit; },
-                Event::MouseButtonUp {x, y, ..} => {
-                    // println!("Mouse click position: ({}, {})", x, y);
-                    let (row, col) = tilemap.get_tile_index(
-                        (x - translation_x) / scale as i32, 
-                        (y - translation_y) / scale as i32
-                    );
-                },
-                Event::MouseMotion {x, y, ..} => {
-                    // println!("Mouse position: ({}, {})", x, y)
-                },
-                Event::Window { win_event: WindowEvent::Resized(w, h), ..} => {
+                Event::Window { win_event: WindowEvent::Resized(_w, _h), ..} => {
                     (scale, (translation_x, translation_y)) = tilemap.get_scale_and_translation(canvas);
                     scale = scale.max(1);
                     println!("scale={} tx={} ty={}", scale, translation_x, translation_y);
@@ -114,7 +103,7 @@ pub fn play_level(
                 (x - translation_x) / scale as i32, 
                 (y - translation_y) / scale as i32
             );
-            if row>=0 && row<tilemap.tiles.len() && col>=0 && col<tilemap.tiles[row].len() && tilemap.tiles[row][col]==TileType::Floor {
+            if row<tilemap.tiles.len() && col<tilemap.tiles[row].len() && tilemap.tiles[row][col]==TileType::Floor {
                 let (x, y) = tilemap.get_tile_pos(row, col);
                 canvas.copy(
                     &img_highlight, 
@@ -134,5 +123,5 @@ pub fn play_level(
         std::thread::sleep(std::time::Duration::from_millis(100));
     }
 
-    return GameResult::Victory;
+    // return GameResult::Victory;
 } 

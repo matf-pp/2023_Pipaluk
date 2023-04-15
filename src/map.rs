@@ -60,7 +60,7 @@ impl Map {
     }
 
     // debug print tilemap to console
-    pub fn print(&mut self) {
+    pub fn _print(&mut self) {
         for row in self.tiles.iter() {
             for cell in row.iter() {
                 print!("{}", *cell as i32);

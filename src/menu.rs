@@ -1,15 +1,12 @@
 use sdl2::surface::Surface;
 use sdl2::ttf::Font;
-use serde_json::{Result, Value};
-use serde::{Deserialize, Serialize};
 use sdl2::EventPump;
 use sdl2::pixels::Color;
-use sdl2::render::{ WindowCanvas, TextureCreator, Texture, BlendMode };
-use sdl2::image::{self, LoadTexture, InitFlag};
+use sdl2::render::{ WindowCanvas, TextureCreator};
+use sdl2::image::LoadTexture;
 use sdl2::video::WindowContext;
 use sdl2::rect::{Rect, Point};
 use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
 
 extern crate sdl2;
 
@@ -18,8 +15,8 @@ pub enum MenuAction {
     Quit,
     NewGame,
     Continue,
-    Credits,
-    Options
+    _Credits,
+    _Options
 }
 
 struct MenuButton {
@@ -119,30 +116,27 @@ pub fn show_menu(
         texture_creator.load_texture("resources/images/cat_idle_1.png").unwrap(),
         texture_creator.load_texture("resources/images/cat_idle_2.png").unwrap()
     ];
-    
 
-    let mut button1 = MenuButton::new(
-        "New Game".to_string(), 
-        MenuAction::NewGame, 
-        true,
-        Rect::new(0, 20, 340, 60)
-    );
-
-    let mut button2 = MenuButton::new(
-        "Continue".to_string(), 
-        MenuAction::Continue, 
-        false,
-        Rect::new(0, 100, 280, 60)
-    );
-
-    let mut button3 = MenuButton::new(
-        "Quit".to_string(), 
-        MenuAction::Quit, 
-        true,
-        Rect::new(0, 180, 220, 60)
-    );
-
-    let mut buttons = vec![button1, button2, button3];
+    let mut buttons = vec![
+        MenuButton::new(
+            "New Game".to_string(), 
+            MenuAction::NewGame, 
+            true,
+            Rect::new(0, 20, 340, 60)
+        ),
+        MenuButton::new(
+            "Continue".to_string(), 
+            MenuAction::Continue, 
+            false,
+            Rect::new(0, 100, 280, 60)
+        ),
+        MenuButton::new(
+            "Quit".to_string(), 
+            MenuAction::Quit, 
+            true,
+            Rect::new(0, 180, 220, 60)
+        )
+    ];
 
     let mut counter = 0;
 
