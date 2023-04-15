@@ -11,6 +11,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::mouse::{Cursor, SystemCursor, MouseState};
 
 use crate::map::{self, TileType};
+use crate::entity::{Entity, Search};
 
 extern crate sdl2;
 
@@ -48,6 +49,11 @@ pub fn play_level(
     tilemap.load(level.tilemap);
     // tilemap.print();
 
+    let goal = (4,3);
+    let player: Entity = Entity::init((2,1));
+    println!("Path: {:?}", player.find_shortest_path(goal, &tilemap.tiles));
+    
+    
     let mut img_floor = texture_creator.load_texture("resources/images/floor.png").unwrap();
     img_floor.set_blend_mode(BlendMode::Blend);
     let mut img_highlight = texture_creator.load_texture("resources/images/highlight.png").unwrap();
