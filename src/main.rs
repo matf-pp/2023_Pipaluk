@@ -44,7 +44,7 @@ fn main() -> Result<(), String> {
         }
         let menu_result = MenuAction::NewGame;
         if menu_result == MenuAction::NewGame {
-            let game_result = level::play_level(&mut canvas, &mut texture_creator, &mut event_pump, "1");
+            let game_result = level::play_level(&mut canvas, &mut texture_creator, &mut event_pump, "3");
             if game_result == GameResult::Quit {
                 break 'running;
             }

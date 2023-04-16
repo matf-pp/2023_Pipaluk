@@ -18,6 +18,7 @@ extern crate sdl2;
 struct LevelFile {
     name: String,
     tilemap: Vec<Vec<u32>>,
+    player: (usize, usize)
 }
 
 fn load_level(path: String) -> LevelFile {
@@ -44,20 +45,22 @@ pub fn play_level(
     cursor.set();
 
     let level = load_level("resources/levels/".to_string() + name + ".json");
+    
     let mut tilemap = map::Map::new();
     tilemap.load(level.tilemap);
-    // tilemap.print();
 
-    let goal = (4,3);
-    let player: Entity = Entity::init((2,1));
-    println!("Path: {:?}", player.find_shortest_path(goal, &tilemap.tiles));
+    let player: Entity = Entity::init(level.player);
+    let mut goal = level.player;
+    let mut trail = vec![];
     
-    
+    // load all sprites
     let mut img_floor = texture_creator.load_texture("resources/images/floor.png").unwrap();
     img_floor.set_blend_mode(BlendMode::Blend);
     let mut img_highlight = texture_creator.load_texture("resources/images/highlight.png").unwrap();
     img_highlight.set_blend_mode(BlendMode::Blend);
     img_highlight.set_alpha_mod(128);
+    let mut img_cat = texture_creator.load_texture("resources/images/cat_idle_1.png").unwrap();
+    img_cat.set_blend_mode(BlendMode::Blend);
 
     let (mut scale, (mut translation_x, mut translation_y)) = tilemap.get_scale_and_translation(canvas);
     println!("scale={} tx={} ty={}", scale, translation_x, translation_y);
@@ -75,7 +78,24 @@ pub fn play_level(
                 _ => {}
             }
         }
-        canvas.set_draw_color(Color::BLACK);
+
+        // get mouse position and determine selected tile
+        let (mouse_x, mouse_y) = (
+            event_pump.mouse_state().x(), 
+            event_pump.mouse_state().y()
+        );
+        let (row, col) = tilemap.get_tile_index(
+            (mouse_x - translation_x) / scale as i32, 
+            (mouse_y - translation_y) / scale as i32
+        );
+
+        // if new tile selected, recalculate path
+        if goal != (row, col) {
+            goal = (row, col);
+            trail = player.find_shortest_path(goal, &tilemap.tiles);
+        }
+
+        canvas.set_draw_color(Color::WHITE);
         canvas.clear();
 
         // draw floor tiles
@@ -97,25 +117,36 @@ pub fn play_level(
             }
         }
 
-        {   
-            let (x, y) = (event_pump.mouse_state().x(), event_pump.mouse_state().y());
-            let (row, col) = tilemap.get_tile_index(
-                (x - translation_x) / scale as i32, 
-                (y - translation_y) / scale as i32
-            );
-            if row<tilemap.tiles.len() && col<tilemap.tiles[row].len() && tilemap.tiles[row][col]==TileType::Floor {
-                let (x, y) = tilemap.get_tile_pos(row, col);
-                canvas.copy(
-                    &img_highlight, 
-                    None,
-                    Rect::new(
-                        x * scale as i32 + translation_x, 
-                        y * scale as i32 + translation_y, 
-                        28 * (scale as u32), 
-                        15 * (scale as u32),
-                    )
-                ).unwrap();
-            }
+        // draw highlights
+        for (row, col) in trail.iter() {
+            let (x, y) = tilemap.get_tile_pos(*row, *col);
+            canvas.copy(
+                &img_highlight, 
+                None,
+                Rect::new(
+                    x * scale as i32 + translation_x, 
+                    y * scale as i32 + translation_y, 
+                    28 * (scale as u32), 
+                    15 * (scale as u32),
+                )
+            ).unwrap();
+        }
+
+        // draw entities
+        {
+            // draw cat
+            let (row, col) = player.get_position();
+            let (x, y) = tilemap.get_tile_pos(row as usize, col as usize);
+            canvas.copy(
+                &img_cat, 
+                None,
+                Rect::new(
+                    (x + 6) * scale as i32 + translation_x, 
+                    (y - 6) * scale as i32 + translation_y, 
+                    16 * (scale as u32), 
+                    16 * (scale as u32),
+                )
+            ).unwrap();
         }
 
         canvas.present();
