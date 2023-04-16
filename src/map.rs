@@ -60,7 +60,7 @@ impl Map {
     }
 
     // debug print tilemap to console
-    pub fn _print(&mut self) {
+    pub fn _print(&self) {
         for row in self.tiles.iter() {
             for cell in row.iter() {
                 print!("{}", *cell as i32);
@@ -92,6 +92,7 @@ impl Map {
                 }
             }
         }
+        self.topmost -= 8;
         self.rightmost += 28 + 1;
         self.bottommost += 19 + 1;
         // println!("topmost={}", self.topmost);

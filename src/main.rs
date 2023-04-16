@@ -7,6 +7,8 @@ mod level;
 mod menu;
 mod map;
 mod entity;
+mod player;
+mod robots;
 
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;

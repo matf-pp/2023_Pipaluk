@@ -3,8 +3,11 @@ use crate::map::TileType;
 extern crate queues;
 use queues::*;
 
-pub trait Search {
+pub trait Entity {
     fn get_position(&self) -> (usize, usize);
+}
+
+pub trait Search: Entity {
     fn find_shortest_path(&self, end: (usize, usize), map: &Vec<Vec<TileType>>) -> Vec<(usize, usize)> {
         let mut visited: Vec<Vec<bool>> = vec![];
         let mut parent: Vec<Vec<(isize, isize)>> = vec![];
@@ -74,19 +77,15 @@ pub trait Search {
             result
         }
         else {vec![]}
-    }}
-
-#[derive(Debug)]
-pub struct Entity {
-    pos: (usize, usize)
+    }
 }
 
-impl Entity {
-    pub fn init(pos: (usize, usize)) -> Self {
-        Self {pos}
-    } 
-}
+pub trait Sight: Entity {
+    const DISTANCE: usize;
+    fn sees(&self, target: (usize, usize), _map: &Vec<Vec<TileType>>) -> bool {
+        let (self_row, self_col) = self.get_position();
+        let (other_row, other_col) = target;
 
-impl Search for Entity {
-    fn get_position(&self) -> (usize, usize) { self.pos }
+        self_row.abs_diff(other_row) + self_col.abs_diff(other_col) <= Self::DISTANCE
+    }
 }

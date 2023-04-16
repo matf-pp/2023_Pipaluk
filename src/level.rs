@@ -9,16 +9,21 @@ use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::{Cursor, SystemCursor};
 
-use crate::map::{self, TileType};
+use crate::map::{Map, TileType};
 use crate::entity::{Entity, Search};
+use crate::player::Player;
+use crate::robots::citizen::*;
+// use crate::robots::policeman::*;
+// use crate::robots::commando::*;
 
 extern crate sdl2;
 
 #[derive(Serialize, Deserialize)]
-struct LevelFile {
+pub struct LevelFile {
     name: String,
     tilemap: Vec<Vec<u32>>,
-    player: (usize, usize)
+    player: (usize, usize),
+    citizens: Vec<(usize, usize)>
 }
 
 fn load_level(path: String) -> LevelFile {
@@ -35,6 +40,26 @@ pub enum GameResult {
     _Defeat
 }
 
+pub struct State {
+    pub tilemap: Map,
+    pub player: Player,
+    pub citizens: Vec<Citizen>
+}
+
+impl State {
+    pub fn init(level: LevelFile) -> Self {
+        let mut tilemap = Map::new();
+        tilemap.load(level.tilemap);
+        let player: Player = Player::init(level.player);
+        let citizens: Vec<Citizen> = level.citizens.iter().map(|&pos| Citizen::init(pos)).collect();
+        Self {
+            tilemap: tilemap,
+            player: player,
+            citizens: citizens
+        }
+    }
+}
+
 pub fn play_level(
     canvas: &mut WindowCanvas, 
     texture_creator: &TextureCreator<WindowContext>,
@@ -44,13 +69,10 @@ pub fn play_level(
     let cursor = Cursor::from_system(SystemCursor::Crosshair).unwrap();
     cursor.set();
 
+    // load level data and initialize game state
     let level = load_level("resources/levels/".to_string() + name + ".json");
-    
-    let mut tilemap = map::Map::new();
-    tilemap.load(level.tilemap);
-
-    let player: Entity = Entity::init(level.player);
-    let mut goal = level.player;
+    let mut state = State::init(level);
+    let mut goal = state.player.get_position();
     let mut trail = vec![];
     
     // load all sprites
@@ -61,17 +83,22 @@ pub fn play_level(
     img_highlight.set_alpha_mod(128);
     let mut img_cat = texture_creator.load_texture("resources/images/cat_idle_1.png").unwrap();
     img_cat.set_blend_mode(BlendMode::Blend);
+    let mut img_citizen = texture_creator.load_texture("resources/images/citizen.png").unwrap();
+    img_citizen.set_blend_mode(BlendMode::Blend);
 
-    let (mut scale, (mut translation_x, mut translation_y)) = tilemap.get_scale_and_translation(canvas);
+    let (mut scale, (mut translation_x, mut translation_y)) = state.tilemap.get_scale_and_translation(canvas);
     println!("scale={} tx={} ty={}", scale, translation_x, translation_y);
 
     loop {
+
+        // ################################################## EVENT HANDLING ##
+        
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..}
                 | Event::KeyDown {keycode: Some(Keycode::Escape), ..} => { return GameResult::Quit; },
                 Event::Window { win_event: WindowEvent::Resized(_w, _h), ..} => {
-                    (scale, (translation_x, translation_y)) = tilemap.get_scale_and_translation(canvas);
+                    (scale, (translation_x, translation_y)) = state.tilemap.get_scale_and_translation(canvas);
                     scale = scale.max(1);
                     println!("scale={} tx={} ty={}", scale, translation_x, translation_y);
                 },
@@ -79,12 +106,15 @@ pub fn play_level(
             }
         }
 
+
+        // ###################################################### GAME LOGIC ##
+
         // get mouse position and determine selected tile
         let (mouse_x, mouse_y) = (
             event_pump.mouse_state().x(), 
             event_pump.mouse_state().y()
         );
-        let (row, col) = tilemap.get_tile_index(
+        let (row, col) = state.tilemap.get_tile_index(
             (mouse_x - translation_x) / scale as i32, 
             (mouse_y - translation_y) / scale as i32
         );
@@ -92,17 +122,28 @@ pub fn play_level(
         // if new tile selected, recalculate path
         if goal != (row, col) {
             goal = (row, col);
-            trail = player.find_shortest_path(goal, &tilemap.tiles);
+            trail = state.player.find_shortest_path(goal, &state.tilemap.tiles);
         }
+
+        // player move
+        // ...
+
+        // citizens move
+        for citizen in state.citizens.iter() {
+            citizen.turn(&state);
+        }
+
+
+        // ####################################################### RENDERING ##
 
         canvas.set_draw_color(Color::WHITE);
         canvas.clear();
 
         // draw floor tiles
-        for row in 0..tilemap.tiles.len() {
-            for col in 0..tilemap.tiles[row].len() {
-                let (x, y) = tilemap.get_tile_pos(row, col);
-                if tilemap.tiles[row][col] == TileType::Floor {
+        for row in 0..state.tilemap.tiles.len() {
+            for col in 0..state.tilemap.tiles[row].len() {
+                let (x, y) = state.tilemap.get_tile_pos(row, col);
+                if state.tilemap.tiles[row][col] == TileType::Floor {
                     canvas.copy(
                         &img_floor, 
                         None,
@@ -119,7 +160,7 @@ pub fn play_level(
 
         // draw highlights
         for (row, col) in trail.iter() {
-            let (x, y) = tilemap.get_tile_pos(*row, *col);
+            let (x, y) = state.tilemap.get_tile_pos(*row, *col);
             canvas.copy(
                 &img_highlight, 
                 None,
@@ -135,8 +176,8 @@ pub fn play_level(
         // draw entities
         {
             // draw cat
-            let (row, col) = player.get_position();
-            let (x, y) = tilemap.get_tile_pos(row as usize, col as usize);
+            let (row, col) = state.player.get_position();
+            let (x, y) = state.tilemap.get_tile_pos(row as usize, col as usize);
             canvas.copy(
                 &img_cat, 
                 None,
@@ -147,6 +188,22 @@ pub fn play_level(
                     16 * (scale as u32),
                 )
             ).unwrap();
+
+            // draw citizens
+            for citizen in state.citizens.iter() {
+                let (row, col) = citizen.get_position();
+                let (x, y) = state.tilemap.get_tile_pos(row as usize, col as usize);
+                canvas.copy(
+                    &img_citizen, 
+                    None,
+                    Rect::new(
+                        (x + 6) * scale as i32 + translation_x, 
+                        (y - 6) * scale as i32 + translation_y, 
+                        16 * (scale as u32), 
+                        16 * (scale as u32),
+                    )
+                ).unwrap();
+            }
         }
 
         canvas.present();
