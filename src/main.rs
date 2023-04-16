@@ -9,6 +9,8 @@ mod map;
 mod entity;
 mod player;
 mod robots;
+mod loader;
+mod animation;
 
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
