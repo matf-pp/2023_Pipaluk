@@ -149,90 +149,89 @@ pub fn play_level(
     // return GameResult::Victory;
 } 
 
+struct Drawable {
+    texture: String,
+    x: i32,
+    y: i32,
+    flipped: bool,
+    key: (usize, usize)
+}
+
+impl Drawable {
+    pub fn init(texture: String, x: i32, y: i32, flipped: bool, key: (usize, usize)) -> Self {
+        Self { texture, x, y, flipped, key }
+    }
+}
+
 fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, state: &mut State) {
-    // draw floor tiles
+
+    let mut drawables: Vec<Drawable> = vec![];
+
+    // add floor tiles
     for row in 0..state.tilemap.tiles.len() {
         for col in 0..state.tilemap.tiles[row].len() {
             let (x, y) = state.tilemap.get_tile_pos(row, col);
-            if state.tilemap.tiles[row][col] == TileType::Floor {
-                canvas.copy(
-                    sprites.get_mut("floor").unwrap(), 
-                    None,
-                    Rect::new(
-                        x * state.tilemap.scale as i32 + state.tilemap.translation_x, 
-                        y * state.tilemap.scale as i32 + state.tilemap.translation_y, 
-                        28 * (state.tilemap.scale as u32), 
-                        19 * (state.tilemap.scale as u32),
-                    )
-                ).unwrap();
+            match state.tilemap.tiles[row][col] {
+                TileType::Floor => { drawables.push(Drawable::init("floor".to_string(), x, y, false, (row, col))); },
+                TileType::Wall => {},
+                TileType::None => {}
             }
         }
     }
 
-    // draw highlights
+    // add highlights
     for (row, col) in state.trail.iter() {
         let (x, y) = state.tilemap.get_tile_pos(*row, *col);
-        let tex = sprites.get_mut("highlight").unwrap();
-        canvas.copy(
+        drawables.push(Drawable::init("highlight".to_string(), x, y, false, (*row, *col)));
+    }
+
+    // add cat
+    {
+        let (x, y, sprite, finished, flipped);
+        if state.animation.is_none() {
+            let (row, col) = state.player.get_position();
+            (x, y) = state.tilemap.get_tile_pos(row as usize, col as usize);
+        }
+        else {
+            ((x, y), sprite, finished, flipped) = state.animation.as_mut().unwrap().next_frame();
+            state.player.pos = state.tilemap.get_tile_index(x+14, y+9);
+            state.trail = state.player.find_shortest_path(state.goal, &state.tilemap.tiles);
+            state.player.flipped = flipped.unwrap_or(state.player.flipped);
+            state.player.current_sprite = sprite.to_string();
+            if finished {
+                println!("Animation finished");
+                state.player.current_sprite = "cat_idle_1".to_string();
+                state.animation = None;
+            }
+        }
+        drawables.push(Drawable::init(state.player.current_sprite.clone(), x+6, y-6, state.player.flipped, state.player.get_position()));
+    }
+
+    // add citizens
+    for citizen in state.citizens.iter() {
+        let (row, col) = citizen.get_position();
+        let (x, y) = state.tilemap.get_tile_pos(row as usize, col as usize);
+        drawables.push(Drawable::init("citizen".to_string(), x+6, y-6, false, (row, col)));
+    }
+
+    drawables.sort_by_key(|d| d.key);
+
+    for drawable in drawables.iter() {
+        let tex = sprites.get_mut(drawable.texture.as_str()).unwrap();
+        canvas.copy_ex(
             tex, 
             None,
             Rect::new(
-                x * state.tilemap.scale as i32 + state.tilemap.translation_x, 
-                y * state.tilemap.scale as i32 + state.tilemap.translation_y, 
+                drawable.x * state.tilemap.scale as i32 + state.tilemap.translation_x, 
+                drawable.y * state.tilemap.scale as i32 + state.tilemap.translation_y, 
                 tex.query().width * (state.tilemap.scale as u32), 
-                tex.query().height * (state.tilemap.scale as u32),
-            )
+                tex.query().height * (state.tilemap.scale as u32)
+            ),
+            0.0, 
+            None, 
+            drawable.flipped, 
+            false
         ).unwrap();
     }
 
-    // draw entities
-    {
-        // draw cat
-        {
-            let (x, y, sprite, finished, flipped);
-            if state.animation.is_none() {
-                let (row, col) = state.player.get_position();
-                (x, y) = state.tilemap.get_tile_pos(row as usize, col as usize);
-            }
-            else {
-                ((x, y), sprite, finished, flipped) = state.animation.as_mut().unwrap().next_frame();
-                state.player.pos = state.tilemap.get_tile_index(x+14, y+9);
-                state.trail = state.player.find_shortest_path(state.goal, &state.tilemap.tiles);
-                state.player.flipped = flipped.unwrap_or(state.player.flipped);
-                state.player.current_sprite = sprite.to_string();
-                if finished {
-                    println!("Animation finished");
-                    state.player.current_sprite = "cat_idle_1".to_string();
-                    state.animation = None;
-                }
-            }
-            canvas.copy_ex(
-                sprites.get_mut(&state.player.current_sprite).unwrap(), 
-                None,
-                Rect::new(
-                    (x + 6) * state.tilemap.scale as i32 + state.tilemap.translation_x, 
-                    (y - 6) * state.tilemap.scale as i32 + state.tilemap.translation_y, 
-                    16 * (state.tilemap.scale as u32), 
-                    16 * (state.tilemap.scale as u32)
-                ),
-                0.0, None, state.player.flipped, false
-            ).unwrap();
-        }
-
-        // draw citizens
-        for citizen in state.citizens.iter() {
-            let (row, col) = citizen.get_position();
-            let (x, y) = state.tilemap.get_tile_pos(row as usize, col as usize);
-            canvas.copy(
-                sprites.get_mut("citizen").unwrap(), 
-                None,
-                Rect::new(
-                    (x + 6) * state.tilemap.scale as i32 + state.tilemap.translation_x, 
-                    (y - 6) * state.tilemap.scale as i32 + state.tilemap.translation_y, 
-                    16 * (state.tilemap.scale as u32), 
-                    16 * (state.tilemap.scale as u32),
-                )
-            ).unwrap();
-        }
-    }
 } 

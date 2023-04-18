@@ -101,8 +101,8 @@ impl Map {
             }
         }
         self.topmost -= 6;
-        self.rightmost += 28 + 1;
-        self.bottommost += 19 + 1;
+        self.rightmost += 28;
+        self.bottommost += 19;
         // println!("topmost={}", self.topmost);
         // println!("bottommost={}", self.bottommost);
         // println!("leftmost={}", self.leftmost);
