@@ -92,13 +92,18 @@ impl Map {
                 }
                 match tilemap[row][col] {
                     0 => {}
-                    _ => {
-                        let (x, y) = self.get_tile_pos(row, col);
+                    1 => {
+                        let (x, y) = self.get_tile_pos(row+1, col+1);
                         if y < self.topmost { self.topmost = y; }
                         if y > self.bottommost { self.bottommost = y; }
                         if x < self.leftmost { self.leftmost = x; }
                         if x > self.rightmost { self.rightmost = x; }
+                    },
+                    2 => {
+                        let (_, y) = self.get_tile_pos(row+1, col+1);
+                        if y < self.topmost { self.topmost = y; }
                     }
+                    _ => {}
                 }
             }
             self.tiles[row+1].push(TileType::None);
@@ -106,10 +111,10 @@ impl Map {
         self.tiles.push(vec![TileType::None; longest_row+2]);
         self.topmost -= 6;
         self.rightmost += 28;
-        self.bottommost += 19;
-        // println!("topmost={}", self.topmost);
-        // println!("bottommost={}", self.bottommost);
-        // println!("leftmost={}", self.leftmost);
-        // println!("rightmost={}", self.rightmost);
+        self.bottommost += 19 + 6;
+        println!("topmost={}", self.topmost);
+        println!("bottommost={}", self.bottommost);
+        println!("leftmost={}", self.leftmost);
+        println!("rightmost={}", self.rightmost);
     }
 }
