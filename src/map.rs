@@ -13,6 +13,9 @@ pub struct Map {
     bottommost: i32,
     leftmost: i32,
     rightmost: i32,
+    pub scale: u32, 
+    pub translation_x: i32,
+    pub translation_y: i32,
 }
 
 impl Map {
@@ -23,6 +26,9 @@ impl Map {
             bottommost: std::i32::MIN,
             leftmost: std::i32::MAX,
             rightmost: std::i32::MIN,
+            scale: 1,
+            translation_x: 0,
+            translation_y: 0
         }
     }
     
@@ -47,16 +53,17 @@ impl Map {
         (x as u32, y as u32)
     }
 
-    // get scale and translation vector needed to center and fill canvas with tilemap
-    pub fn get_scale_and_translation(&mut self, canvas: &mut WindowCanvas) -> (u32, (i32, i32)) {
+    // calculate and get scale and translation vector needed to center and fill canvas with tilemap
+    pub fn calc_scale_and_translation(&mut self, canvas: &mut WindowCanvas) -> (u32, (i32, i32)) {
         let (canvas_x, canvas_y) = canvas.output_size().unwrap();
         let (map_x, map_y) = self.get_dimensions();
         
-        let scale = (canvas_x as f32 / map_x as f32).min(canvas_y as f32 / map_y as f32) as u32;
-        let translation_x = - self.leftmost * scale as i32 + (canvas_x - map_x * scale) as i32 / 2;
-        let translation_y = (canvas_y - map_y * scale) as i32 / 2;
-
-        (scale, (translation_x, translation_y))
+        self.scale = (canvas_x as f32 / map_x as f32).min(canvas_y as f32 / map_y as f32) as u32;
+        self.scale = self.scale.max(1);
+        self.translation_x = - self.leftmost * self.scale as i32 + (canvas_x - map_x * self.scale) as i32 / 2;
+        self.translation_y = - self.topmost * self.scale as i32 + (canvas_y - map_y * self.scale) as i32 / 2;
+        
+        (self.scale, (self.translation_x, self.translation_y))
     }
 
     // debug print tilemap to console
@@ -71,6 +78,7 @@ impl Map {
 
     // load tilemap from json array
     pub fn load(&mut self, tilemap: Vec<Vec<u32>>) {
+        // let max_cols = 
         for row in 0..tilemap.len() {
             self.tiles.push(vec![TileType::None; 0]);
             for col in 0..tilemap[row].len() {
@@ -92,7 +100,7 @@ impl Map {
                 }
             }
         }
-        self.topmost -= 8;
+        self.topmost -= 6;
         self.rightmost += 28 + 1;
         self.bottommost += 19 + 1;
         // println!("topmost={}", self.topmost);
