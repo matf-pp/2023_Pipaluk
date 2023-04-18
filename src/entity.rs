@@ -48,8 +48,7 @@ pub trait Search: Entity {
                     if x >= 0 && x < map.len() as isize {
                         if y >= 0 && y < map[x as usize].len() as isize {
                             let (x, y) = (x as usize, y as usize);
-                            if !visited[x][y] && map[x][y] != TileType::Wall
-                            && map[x][y] != TileType::None {
+                            if !visited[x][y] && map[x][y] == TileType::Floor {
                                 q.add(((x as isize, y as isize), d)).unwrap();
                                 visited[x][y] = true;
                                 parent[x][y] = ((curr.0).0, (curr.0).1); 

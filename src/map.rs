@@ -4,7 +4,8 @@ use sdl2::render::{ WindowCanvas };
 pub enum TileType {
     None,
     Floor,
-    Wall
+    Wall,
+    Water
 }
 
 pub struct Map {
@@ -87,12 +88,13 @@ impl Map {
                 match tilemap[row][col] {
                     0 => { self.tiles[row+1].push(TileType::None) }
                     1 => { self.tiles[row+1].push(TileType::Floor) }
-                    2 => { self.tiles[row+1].push(TileType::Wall) }
+                    2 => { self.tiles[row+1].push(TileType::Wall) },
+                    3 => { self.tiles[row+1].push(TileType::Water) }
                     _ => {}
                 }
                 match tilemap[row][col] {
                     0 => {}
-                    1 => {
+                    1 | 3 => {
                         let (x, y) = self.get_tile_pos(row+1, col+1);
                         if y < self.topmost { self.topmost = y; }
                         if y > self.bottommost { self.bottommost = y; }
