@@ -5,7 +5,7 @@ pub enum TileType {
     None,
     Floor,
     Wall,
-    Water
+    Liquid
 }
 
 pub struct Map {
@@ -61,8 +61,8 @@ impl Map {
         
         self.scale = (canvas_x as f32 / map_x as f32).min(canvas_y as f32 / map_y as f32) as u32;
         self.scale = self.scale.max(1);
-        self.translation_x = - self.leftmost * self.scale as i32 + (canvas_x - map_x * self.scale) as i32 / 2;
-        self.translation_y = - self.topmost * self.scale as i32 + (canvas_y - map_y * self.scale) as i32 / 2;
+        self.translation_x = - self.leftmost * self.scale as i32 + (canvas_x as i32 - map_x as i32 * self.scale as i32) / 2;
+        self.translation_y = - self.topmost * self.scale as i32 + (canvas_y as i32 - map_y as i32 * self.scale as i32) / 2;
         
         (self.scale, (self.translation_x, self.translation_y))
     }
@@ -89,7 +89,7 @@ impl Map {
                     0 => { self.tiles[row+1].push(TileType::None) }
                     1 => { self.tiles[row+1].push(TileType::Floor) }
                     2 => { self.tiles[row+1].push(TileType::Wall) },
-                    3 => { self.tiles[row+1].push(TileType::Water) }
+                    3 => { self.tiles[row+1].push(TileType::Liquid) }
                     _ => {}
                 }
                 match tilemap[row][col] {

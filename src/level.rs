@@ -82,7 +82,7 @@ pub fn play_level(
         sprites.insert(name.to_string(), texture_creator.load_texture(format!("resources/images/{}.png", *name)).unwrap()); 
     }
     let level_textures = vec![
-        "floor", "water", "wall_left", "wall_right", "wall_left_transparent", "wall_right_transparent"
+        "floor", "liquid", "wall_left", "wall_right", "wall_left_transparent", "wall_right_transparent"
     ];
     for name in level_textures.iter() { 
         sprites.insert(
@@ -216,7 +216,7 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
                         }
                     }
                 },
-                TileType::Water => { drawables.push(Drawable::init("water".to_string(), x, y+3, false, (row, col))); },
+                TileType::Liquid => { drawables.push(Drawable::init("liquid".to_string(), x, y+3, false, (row, col))); },
                 TileType::None => {}
             }
         }
@@ -257,8 +257,8 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
         drawables.push(Drawable::init("citizen".to_string(), x+6, y-6, false, (row, col)));
     }
 
+    // sort and draw everything
     drawables.sort_by_key(|d| d.key);
-
     for drawable in drawables.iter() {
         let tex = sprites.get_mut(drawable.texture.as_str()).unwrap();
         canvas.copy_ex(
@@ -276,5 +276,4 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
             false
         ).unwrap();
     }
-
 } 
