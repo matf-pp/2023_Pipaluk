@@ -72,7 +72,12 @@ pub fn play_level(
     
     // load all sprites
     let mut sprites: HashMap<String, Texture> = HashMap::new();
-    let texture_names = vec!["floor", "highlight", "citizen", "policeman", "cat_idle_1", "cat_run_0", "cat_run_1", "cat_run_2", "cat_run_3", "cat_run_4"];
+    let texture_names = vec![
+        "floor", "highlight",
+        "wall_left", "wall_right", "wall_left_transparent", "wall_right_transparent",
+        "citizen", "policeman", 
+        "cat_idle_1", "cat_run_0", "cat_run_1", "cat_run_2", "cat_run_3", "cat_run_4"
+    ];
     for name in texture_names.iter() { 
         sprites.insert(name.to_string(), texture_creator.load_texture(format!("resources/images/{}.png", *name)).unwrap()); 
     }
@@ -167,13 +172,31 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
 
     let mut drawables: Vec<Drawable> = vec![];
 
-    // add floor tiles
+    // add floor tiles & walls
     for row in 0..state.tilemap.tiles.len() {
         for col in 0..state.tilemap.tiles[row].len() {
             let (x, y) = state.tilemap.get_tile_pos(row, col);
             match state.tilemap.tiles[row][col] {
                 TileType::Floor => { drawables.push(Drawable::init("floor".to_string(), x, y, false, (row, col))); },
-                TileType::Wall => {},
+                TileType::Wall => {
+                    // drawables.push(Drawable::init("wall".to_string(), x, y-8, false, (row, col)));
+                    if state.tilemap.tiles[row+1][col] == TileType::Floor {
+                        if state.tilemap.tiles[row][col-1] == TileType::Floor {
+                            drawables.push(Drawable::init("wall_right_transparent".to_string(), x, y-9, false, (row, col)));
+                        }
+                        else {
+                            drawables.push(Drawable::init("wall_right".to_string(), x, y-9, false, (row, col)));
+                        }
+                    }
+                    if state.tilemap.tiles[row][col+1] == TileType::Floor {
+                        if state.tilemap.tiles[row-1][col] == TileType::Floor {
+                            drawables.push(Drawable::init("wall_left_transparent".to_string(), x+12, y-9, false, (row, col)));
+                        }
+                        else {
+                            drawables.push(Drawable::init("wall_left".to_string(), x+12, y-9, false, (row, col)));
+                        }
+                    }
+                },
                 TileType::None => {}
             }
         }

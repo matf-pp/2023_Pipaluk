@@ -78,14 +78,16 @@ impl Map {
 
     // load tilemap from json array
     pub fn load(&mut self, tilemap: Vec<Vec<u32>>) {
-        // let max_cols = 
+        let longest_row = tilemap.iter().fold(0, |acc, row| acc.max(row.len()));
+        self.tiles.push(vec![TileType::None; longest_row+2]);
         for row in 0..tilemap.len() {
             self.tiles.push(vec![TileType::None; 0]);
+            self.tiles[row+1].push(TileType::None);
             for col in 0..tilemap[row].len() {
                 match tilemap[row][col] {
-                    0 => { self.tiles[row].push(TileType::None) }
-                    1 => { self.tiles[row].push(TileType::Floor) }
-                    2 => { self.tiles[row].push(TileType::Wall) }
+                    0 => { self.tiles[row+1].push(TileType::None) }
+                    1 => { self.tiles[row+1].push(TileType::Floor) }
+                    2 => { self.tiles[row+1].push(TileType::Wall) }
                     _ => {}
                 }
                 match tilemap[row][col] {
@@ -99,7 +101,9 @@ impl Map {
                     }
                 }
             }
+            self.tiles[row+1].push(TileType::None);
         }
+        self.tiles.push(vec![TileType::None; longest_row+2]);
         self.topmost -= 6;
         self.rightmost += 28;
         self.bottommost += 19;
