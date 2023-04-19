@@ -4,17 +4,26 @@
 use crate::entity::*;
 use crate::level::State;
 
+pub enum CitizenState { CALM, PANIC }
+
 pub struct Citizen {
     pos: (usize, usize),
+    mode: CitizenState
 }
 
 impl Citizen {
-    pub fn init(pos: (usize, usize)) -> Self {
-        Self {pos}
+    pub fn init(pos: (usize, usize), mode: CitizenState) -> Self {
+        Self {pos, mode}
     } 
-
-    pub fn turn(&self, _state: &State) {
-        // _state.tilemap._print();
+    
+    pub fn turn(&mut self, _state: &State) {
+        let player_pos = _state.player.get_position();
+        let sees = self.sees(player_pos, &_state.tilemap.tiles);
+        
+        match sees {
+            true => self.mode = CitizenState::CALM,
+            false => self.mode = CitizenState::PANIC
+        }
     }
 }
 

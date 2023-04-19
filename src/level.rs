@@ -15,8 +15,8 @@ use crate::map::{Map, TileType};
 use crate::entity::{Entity, Search};
 use crate::player::Player;
 use crate::robots::citizen::*;
-// use crate::robots::policeman::*;
-// use crate::robots::commando::*;
+//use crate::robots::policeman::*;
+//use crate::robots::commando::*;
 
 extern crate sdl2;
 
@@ -31,6 +31,8 @@ pub struct State {
     pub tilemap: Map,
     pub player: Player,
     pub citizens: Vec<Citizen>,
+    //pub policemen: Vec<Policeman>,
+    //pub commando: Vec<Commando>,
     pub animation: Option<Animation>,
     pub trail: Vec<(usize, usize)>,
     pub goal: (usize, usize)
@@ -41,7 +43,7 @@ impl State {
         let mut tilemap = Map::new();
         tilemap.load(level.tilemap);
         let player: Player = Player::init(level.player);
-        let citizens: Vec<Citizen> = level.citizens.iter().map(|&pos| Citizen::init(pos)).collect();
+        let citizens: Vec<Citizen> = level.citizens.iter().map(|&pos| Citizen::init(pos, CitizenState::CALM)).collect();
         Self {
             tilemap: tilemap,
             player: player,
