@@ -8,6 +8,7 @@ pub enum TileType {
     Liquid
 }
 
+#[derive(Clone)]
 pub struct Map {
     pub tiles: Vec<Vec<TileType>>,
     topmost: i32,

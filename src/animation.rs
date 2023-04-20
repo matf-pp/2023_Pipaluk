@@ -1,5 +1,5 @@
 
-
+#[derive(Clone)]
 pub struct Animation {
     pub path: Vec<(i32, i32)>,
     pub sprites: Vec<String>,

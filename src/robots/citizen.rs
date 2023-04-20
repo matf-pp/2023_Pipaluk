@@ -4,8 +4,10 @@
 use crate::entity::*;
 use crate::level::State;
 
+#[derive(Clone, Copy)]
 pub enum CitizenState { CALM, PANIC }
 
+#[derive(Clone)]
 pub struct Citizen {
     pos: (usize, usize),
     mode: CitizenState
@@ -21,8 +23,13 @@ impl Citizen {
         let sees = self.sees(player_pos, &_state.tilemap.tiles);
         
         match sees {
-            true => self.mode = CitizenState::CALM,
-            false => self.mode = CitizenState::PANIC
+            true => {
+                println!("I see you!");
+                self.mode = CitizenState::PANIC;
+            },
+            false => {
+                self.mode = CitizenState::CALM;
+            }
         }
     }
 }

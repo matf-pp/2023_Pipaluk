@@ -27,6 +27,7 @@ pub enum GameResult {
     _Defeat
 }
 
+#[derive(Clone)]
 pub struct State {
     pub tilemap: Map,
     pub player: Player,
@@ -147,8 +148,9 @@ pub fn play_level(
             // ...
 
             // citizens move
-            for citizen in state.citizens.iter() {
-                citizen.turn(&state);
+            for i in 0..state.citizens.len() {
+                let state_copy = state.clone();
+                state.citizens[i].turn(&state_copy);
             }
         }
 

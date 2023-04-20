@@ -1,5 +1,6 @@
 use crate::entity::*;
 
+#[derive(Clone)]
 pub struct Player {
     pub pos: (usize, usize),
     pub current_sprite: String,
