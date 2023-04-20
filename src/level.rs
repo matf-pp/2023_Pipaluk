@@ -63,6 +63,16 @@ impl State {
             goal: (0, 0)
         }
     }
+
+    pub fn tile_free(&self, tile: (usize, usize)) -> bool {
+        for citizen in self.citizens.iter() {
+            if citizen.get_position() == tile { return false }
+        }
+        for policeman in self.policemen.iter() {
+            if policeman.get_position() == tile { return false }
+        }
+        self.tilemap.passable(tile)
+    }
 }
 
 pub fn play_level(
@@ -121,7 +131,7 @@ pub fn play_level(
         // if new tile selected (and no animation is underway), recalculate path
         if state.goal != (row, col) && state.animation.is_none() {
             state.goal = (row, col); 
-            state.trail = state.player.find_shortest_path(state.goal, &state.tilemap.tiles);
+            state.trail = state.player.find_shortest_path(state.goal, &state);
         }
 
         // player move and/or handle events
@@ -258,7 +268,7 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
         else {
             ((x, y), sprite, finished, flipped) = state.animation.as_mut().unwrap().next_frame();
             state.player.pos = state.tilemap.get_tile_index(x+14, y+9);
-            state.trail = state.player.find_shortest_path(state.goal, &state.tilemap.tiles);
+            state.trail = state.player.find_shortest_path(state.goal, &state);
             state.player.flipped = flipped.unwrap_or(state.player.flipped);
             state.player.current_sprite = sprite.to_string();
             if finished {

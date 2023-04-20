@@ -1,4 +1,4 @@
-use crate::map::TileType;
+use crate::{map::TileType, level::State};
 
 extern crate queues;
 use queues::*;
@@ -8,13 +8,13 @@ pub trait Entity {
 }
 
 pub trait Search: Entity {
-    fn find_shortest_path(&self, end: (usize, usize), map: &Vec<Vec<TileType>>) -> Vec<(usize, usize)> {
+    fn find_shortest_path(&self, end: (usize, usize), state: &State) -> Vec<(usize, usize)> {
         let mut visited: Vec<Vec<bool>> = vec![];
         let mut parent: Vec<Vec<(isize, isize)>> = vec![];
-        for i in 0..map.len() {
+        for i in 0..state.tilemap.tiles.len() {
             visited.push(vec![]);
             parent.push(vec![]);
-            for _ in 0..map[i as usize].len() {
+            for _ in 0..state.tilemap.tiles[i as usize].len() {
                 visited[i].push(false);
                 parent[i].push((-1, -1)); 
             } 
@@ -28,6 +28,14 @@ pub trait Search: Entity {
         q.add(((row as isize, col as isize), 0)).unwrap();
         
         visited[row][col] = true;
+        for citizen in state.citizens.iter() {
+            let (r, c) = citizen.get_position();
+            visited[r][c] = true;
+        }
+        for policeman in state.policemen.iter() {
+            let (r, c) = policeman.get_position();
+            visited[r][c] = true;
+        }
         
         // let dx: Vec<isize> = vec![1, 0, -1, 0, 1, -1, 1, -1];
         // let dy: Vec<isize> = vec![0, 1, 0, -1, 1, -1, -1, 1];
@@ -45,10 +53,10 @@ pub trait Search: Entity {
                     let y = (curr.0).1 + dy[i];
                     let d = curr.1 + 1;
                     
-                    if x >= 0 && x < map.len() as isize {
-                        if y >= 0 && y < map[x as usize].len() as isize {
+                    if x >= 0 && x < state.tilemap.tiles.len() as isize {
+                        if y >= 0 && y < state.tilemap.tiles[x as usize].len() as isize {
                             let (x, y) = (x as usize, y as usize);
-                            if !visited[x][y] && map[x][y] == TileType::Floor {
+                            if !visited[x][y] && state.tilemap.tiles[x][y] == TileType::Floor {
                                 q.add(((x as isize, y as isize), d)).unwrap();
                                 visited[x][y] = true;
                                 parent[x][y] = ((curr.0).0, (curr.0).1); 

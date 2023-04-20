@@ -24,10 +24,11 @@ impl Citizen {
         
         match sees {
             true => {
-                println!("I see you!");
+                println!("AAAAAA!");
                 self.mode = CitizenState::PANIC;
             },
             false => {
+                println!("Calm...");
                 self.mode = CitizenState::CALM;
             }
         }
@@ -41,7 +42,7 @@ impl Entity for Citizen {
 impl Search for Citizen {}
 
 impl Sight for Citizen {
-    const DISTANCE: usize = 3;
+    const DISTANCE: usize = 2;
 }
 
 

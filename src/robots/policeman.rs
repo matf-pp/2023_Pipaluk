@@ -19,49 +19,51 @@ impl Policeman {
         Self {pos, speed}
     } 
     
-    pub fn turn(&mut self, _state: &State) {
-        let player_pos = _state.player.get_position();
-        let citizens = &_state.citizens;
+    pub fn turn(&mut self, state: &State) {
+        let player_pos = state.player.get_position();
+        let citizens = &state.citizens;
         
-        //go to nearest citizen that's panicking (if there is one)
+        // if I see player, chase!
+        let sees_player = self.sees(player_pos, &state.tilemap.tiles);
+        if sees_player {
+            println!("Apprehending suspect!");
+            let player_pos = state.player.get_position();
+            let path = self.find_shortest_path(player_pos, state);
+            
+            if self.speed < path.len() {
+                self.pos = path[self.speed];
+            }
+            else {
+                self.pos = *path.last().unwrap();
+            }
+            return;
+        }
+
+        // if I hear a citizen plead for help, assist!
         let panic_citizens = citizens
             .into_iter()
             .filter(|citizen| citizen.mode == CitizenState::PANIC)
             .cloned()
             .collect::<Vec<Citizen>>();
-            
-        /*FIXME:    
-            -- policeman flying out of bounds
-            -- double movement when policeman notices panicked citizen
-        */
         if panic_citizens.len() != 0 {
-            let path = self.find_shortest_path(panic_citizens[0].get_position(), &_state.tilemap.tiles);
+            let path = self.find_shortest_path(panic_citizens[0].get_position(), state);
             if self.speed < path.len() {
                 self.pos = path[self.speed];
             }
         }
-        
-        let sees_player = self.sees(player_pos, &_state.tilemap.tiles);
-        match sees_player {
-            //go to player
-            true => {
-                println!("I see you!");
-                let player_pos = _state.player.get_position();
-                let path = self.find_shortest_path(player_pos, &_state.tilemap.tiles);
-                
-                if self.speed < path.len() {
-                    self.pos = path[self.speed];
-                }
-            }
-            //random movement
-            false => {
-                let dx: Vec<isize> = vec![1, -1, 0, 0];
-                let dy: Vec<isize> = vec![0, 0, -1, 1];
-                
-                let x = self.pos.0 as isize + dx[rand::thread_rng().gen_range(0..dx.len()-1)];
-                let y = self.pos.1 as isize + dy[rand::thread_rng().gen_range(0..dy.len()-1)];
-                
-                self.pos = (self.speed*x as usize, self.speed*y as usize);
+
+        // otherwise wander aimlessly...
+        println!("Patrolling.");
+        loop {
+            let delta: Vec<(isize, isize)> = vec![(1,0), (-1,0), (0,1), (0,-1)];
+            let i = rand::thread_rng().gen_range(0..3);
+            
+            let x = (self.pos.0 as isize + delta[i].0) as usize;
+            let y = (self.pos.1 as isize + delta[i].1) as usize;
+            
+            if state.tile_free((x, y)) {
+                self.pos = (x, y);
+                break;
             }
         }
     }
@@ -74,5 +76,5 @@ impl Entity for Policeman {
 impl Search for Policeman {}
 
 impl Sight for Policeman {
-    const DISTANCE: usize = 5;
+    const DISTANCE: usize = 3;
 }

@@ -33,6 +33,11 @@ impl Map {
             translation_y: 0
         }
     }
+
+    pub fn passable(&self, tile: (usize, usize)) -> bool {
+        let (row, col) = tile;
+        self.tiles[row][col] == TileType::Floor
+    }
     
     // get tile pos relative to the top corner of 0,0 in art space
     pub fn get_tile_pos(&mut self, row: usize, col: usize) -> (i32, i32) {
