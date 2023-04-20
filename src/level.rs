@@ -124,22 +124,13 @@ pub fn play_level(
             state.trail = state.player.find_shortest_path(state.goal, &state.tilemap.tiles);
         }
 
-        // ################################################## EVENT HANDLING ##
-        
+        // player move and/or handle events
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..}
                 | Event::KeyDown {keycode: Some(Keycode::Escape), ..} => { return GameResult::Quit; },
                 Event::MouseButtonDown { mouse_btn: MouseButton::Left, ..} => {
-                    if state.animation.is_none() {
-                        let mut points = vec![state.player.pos];
-                        points.append(&mut state.trail);
-                        state.animation = Some(Animation::init(
-                            points.iter().map(|(row, col)| state.tilemap.get_tile_pos(*row, *col)).collect(), 
-                            vec!["cat_run_0", "cat_run_1", "cat_run_2", "cat_run_3", "cat_run_4"].iter().map(|name| name.to_string()).collect(),
-                            3
-                        ));
-                    }
+                    play_turn(canvas, &mut sprites, &mut state);
                 },
                 Event::Window { win_event: WindowEvent::Resized(_w, _h), ..} => {
                     let (scale, (translation_x, translation_y)) = state.tilemap.calc_scale_and_translation(canvas);
@@ -149,40 +140,49 @@ pub fn play_level(
             }
         }
 
-
-        // ###################################################### GAME LOGIC ##
-
-        if state.animation.is_none() {
-            // player move
-            // ...
-
-            // citizens move
-            for i in 0..state.citizens.len() {
-                let state_copy = state.clone();
-                state.citizens[i].turn(&state_copy);
-            }
-            
-            // policemen move
-            for i in 0..state.policemen.len() {
-                let state_copy = state.clone();
-                state.policemen[i].turn(&state_copy);
-            }
-            
-        }
-
-
-        // ####################################################### RENDERING ##
-
-        canvas.set_draw_color(Color::WHITE);
-        canvas.clear();
         render(canvas, &mut sprites, &mut state);
-        canvas.present();
-
         std::thread::sleep(std::time::Duration::from_millis(100));
     }
 
     // return GameResult::Victory;
 } 
+
+fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, state: &mut State) {
+    
+    // player turn
+    let mut points = vec![state.player.pos];
+    points.append(&mut state.trail);
+    if points.len() == 1 {
+        return;
+    }
+    state.animation = Some(Animation::init(
+        points.iter().map(|(row, col)| state.tilemap.get_tile_pos(*row, *col)).collect(), 
+        vec!["cat_run_0", "cat_run_1", "cat_run_2", "cat_run_3", "cat_run_4"].iter().map(|name| name.to_string()).collect(),
+        3
+    ));
+    while state.animation.is_some() {
+        render(canvas, sprites, state);
+        std::thread::sleep(std::time::Duration::from_millis(100));
+    }
+
+    // citizens turn
+    println!("Citizens turn...");
+    for i in 0..state.citizens.len() {
+        let state_copy = state.clone();
+        state.citizens[i].turn(&state_copy);
+        render(canvas, sprites, state);
+        std::thread::sleep(std::time::Duration::from_millis(100));
+    }
+    
+    // policemen turn
+    println!("Policemen turn...");
+    for i in 0..state.policemen.len() {
+        let state_copy = state.clone();
+        state.policemen[i].turn(&state_copy);
+        render(canvas, sprites, state);
+        std::thread::sleep(std::time::Duration::from_millis(100));
+    }
+}
 
 struct Drawable {
     texture: String,
@@ -285,6 +285,8 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
     }
 
     // sort and draw everything
+    canvas.set_draw_color(Color::WHITE);
+    canvas.clear();
     drawables.sort_by_key(|d| d.key);
     for drawable in drawables.iter() {
         let tex = sprites.get_mut(drawable.texture.as_str()).unwrap();
@@ -303,4 +305,5 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
             false
         ).unwrap();
     }
+    canvas.present();
 } 
