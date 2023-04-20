@@ -6,7 +6,7 @@ pub struct LevelFile {
     pub tilemap: Vec<Vec<u32>>,
     pub player: (usize, usize),
     pub citizens: Vec<(usize, usize)>,
-    //pub policemen: Vec<(usize, usize)>
+    pub policemen: Vec<((usize, usize), usize)> //trial data
 }
 
 pub fn load_level(path: String) -> LevelFile {

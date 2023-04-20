@@ -8,6 +8,7 @@ use crate::robots::citizen::*;
 extern crate rand;
 use rand::Rng;
 
+#[derive(Clone)]
 pub struct Policeman {
     pos: (usize, usize),
     speed: usize
@@ -28,10 +29,14 @@ impl Policeman {
             .filter(|citizen| citizen.mode == CitizenState::PANIC)
             .cloned()
             .collect::<Vec<Citizen>>();
-        
+            
+        /*FIXME:    
+            -- policeman flying out of bounds
+            -- double movement when policeman notices panicked citizen
+        */
         if panic_citizens.len() != 0 {
             let path = self.find_shortest_path(panic_citizens[0].get_position(), &_state.tilemap.tiles);
-            if self.speed <= path.len() {
+            if self.speed < path.len() {
                 self.pos = path[self.speed];
             }
         }
@@ -44,7 +49,7 @@ impl Policeman {
                 let player_pos = _state.player.get_position();
                 let path = self.find_shortest_path(player_pos, &_state.tilemap.tiles);
                 
-                if self.speed <= path.len() {
+                if self.speed < path.len() {
                     self.pos = path[self.speed];
                 }
             }
@@ -53,10 +58,10 @@ impl Policeman {
                 let dx: Vec<isize> = vec![1, -1, 0, 0];
                 let dy: Vec<isize> = vec![0, 0, -1, 1];
                 
-                let x = self.pos.0 + dx[rand::thread_rng().gen_range(0..dx.len())] as usize;
-                let y = self.pos.1 + dy[rand::thread_rng().gen_range(0..dy.len())] as usize;
+                let x = self.pos.0 as isize + dx[rand::thread_rng().gen_range(0..dx.len()-1)];
+                let y = self.pos.1 as isize + dy[rand::thread_rng().gen_range(0..dy.len()-1)];
                 
-                self.pos = (self.speed*x, self.speed*y);
+                self.pos = (self.speed*x as usize, self.speed*y as usize);
             }
         }
     }

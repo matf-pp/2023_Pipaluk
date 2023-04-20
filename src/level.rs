@@ -15,7 +15,7 @@ use crate::map::{Map, TileType};
 use crate::entity::{Entity, Search};
 use crate::player::Player;
 use crate::robots::citizen::*;
-//use crate::robots::policeman::*;
+use crate::robots::policeman::*;
 //use crate::robots::commando::*;
 
 extern crate sdl2;
@@ -32,7 +32,7 @@ pub struct State {
     pub tilemap: Map,
     pub player: Player,
     pub citizens: Vec<Citizen>,
-    //pub policemen: Vec<Policeman>,
+    pub policemen: Vec<Policeman>,
     //pub commando: Vec<Commando>,
     pub animation: Option<Animation>,
     pub trail: Vec<(usize, usize)>,
@@ -44,13 +44,20 @@ impl State {
         let mut tilemap = Map::new();
         tilemap.load(level.tilemap);
         let player: Player = Player::init(level.player);
-        let citizens: Vec<Citizen> = level.citizens.iter().map(|&pos| Citizen::init(pos, CitizenState::CALM)).collect();
-        //let policemen: Vec<Policeman> = level.policemen.iter().map(|&pos| Policeman::init(pos.pos, pos.speed).collect();
+        let citizens: Vec<Citizen> = level.citizens
+            .iter()
+            .map(|&pos| Citizen::init(pos, CitizenState::CALM))
+            .collect();
+        let policemen: Vec<Policeman> = level.policemen
+            .iter()
+            .map(|&p| Policeman::init(p.0, p.1))
+            .collect();
+            
         Self {
             tilemap: tilemap,
             player: player,
             citizens: citizens,
-            //policemen: policemen
+            policemen: policemen,
             animation: None,
             trail: vec![],
             goal: (0, 0)
@@ -155,13 +162,12 @@ pub fn play_level(
                 state.citizens[i].turn(&state_copy);
             }
             
-            /*
             // policemen move
             for i in 0..state.policemen.len() {
                 let state_copy = state.clone();
                 state.policemen[i].turn(&state_copy);
             }
-            */
+            
         }
 
 
@@ -271,14 +277,12 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
         drawables.push(Drawable::init("citizen".to_string(), x+6, y-6, false, (row, col)));
     }
     
-    /*
     // add policemen
     for policeman in state.policemen.iter() {
-        let (row, col) = citizen.get_position();
+        let (row, col) = policeman.get_position();
         let (x, y) = state.tilemap.get_tile_pos(row as usize, col as usize);
         drawables.push(Drawable::init("policeman".to_string(), x+6, y-6, false, (row, col)));
     }
-    */
 
     // sort and draw everything
     drawables.sort_by_key(|d| d.key);

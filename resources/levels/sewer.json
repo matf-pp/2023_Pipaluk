@@ -16,5 +16,8 @@
     "player": [3, 2],
     "citizens" : [
         [7, 7]
+    ],
+    "policemen" : [
+        [[5, 5], 3]
     ]
 }
