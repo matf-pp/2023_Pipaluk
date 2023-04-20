@@ -4,13 +4,13 @@
 use crate::entity::*;
 use crate::level::State;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum CitizenState { CALM, PANIC }
 
 #[derive(Clone)]
 pub struct Citizen {
     pos: (usize, usize),
-    mode: CitizenState
+    pub mode: CitizenState
 }
 
 impl Citizen {
