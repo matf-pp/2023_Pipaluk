@@ -28,7 +28,7 @@ impl Policeman {
         if sees_player {
             println!("Apprehending suspect!");
             let player_pos = state.player.get_position();
-            let path = self.find_shortest_path(player_pos, state);
+            let path = self.find_shortest_path(player_pos, &state);
             
             if self.speed < path.len() {
                 self.pos = path[self.speed];
@@ -40,16 +40,32 @@ impl Policeman {
         }
 
         // if I hear a citizen plead for help, assist!
-        let panic_citizens = citizens
+        let mut panic_citizens = citizens
             .into_iter()
-            .filter(|citizen| citizen.mode == CitizenState::PANIC)
+            .filter(|&citizen| citizen.mode == CitizenState::PANIC)
             .cloned()
             .collect::<Vec<Citizen>>();
+        // find closest civilian
+        panic_citizens.sort_by(|x, y| x.cmp(y));
+        
         if panic_citizens.len() != 0 {
-            let path = self.find_shortest_path(panic_citizens[0].get_position(), state);
+            let citizen_pos = panic_citizens[0].get_position();
+            let path = self.find_shortest_path(citizen_pos, &state);
+            //debug
+            println!("Path length: {}", path.len());
+            for c in panic_citizens {
+                println!("{:?}", c);
+            }
+            
+            if path.len() == 0 {return;}
+            
             if self.speed < path.len() {
                 self.pos = path[self.speed];
             }
+            else {
+                self.pos = *path.last().unwrap();
+            }
+            return;
         }
 
         // otherwise wander aimlessly...
@@ -63,7 +79,7 @@ impl Policeman {
             
             if state.tile_free((x, y)) {
                 self.pos = (x, y);
-                break;
+                return;
             }
         }
     }
