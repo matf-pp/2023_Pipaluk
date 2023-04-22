@@ -93,28 +93,25 @@ pub trait Sight: Entity {
         let (self_row, self_col) = self.get_position();
         let (other_row, other_col) = target;
 
-        if self_row.abs_diff(other_row) + self_col.abs_diff(other_col) <= Self::DISTANCE {return false;}
+        if self_row.abs_diff(other_row) + self_col.abs_diff(other_col) > Self::DISTANCE {return false;}
+        if (self_row, self_col) == (other_row, other_col) {return true;}
         
-        let mut min_i = self_row.min(other_row);
-        let max_i = self_row.max(other_row);
-        let mut min_j = self_col.min(other_col);
-        let max_j = self_col.max(other_col);
+        let mut dir_c: f32 = other_col as f32 - self_col as f32;
+        let mut dir_r: f32 = other_row as f32 - self_row as f32;
+        let norm = (dir_r*dir_r + dir_c*dir_c).sqrt();
+        dir_r /= norm * 2.0;
+        dir_c /= norm * 2.0;
 
-        let mut dir_x: f32 = (max_i - min_i) as f32;
-        let mut dir_y: f32 = (max_j - min_j) as f32;
-        let norm = (dir_x*dir_x + dir_y*dir_y).sqrt();
-        dir_x /= norm;
-        dir_y /= norm;
-        if dir_x < 0.6 {dir_x = 0.0};
-        if dir_y < 0.6 {dir_y = 0.0};
-        let dir = (dir_x.round() as usize, dir_y.round() as usize);
+        let mut curr_row = self_row as f32;
+        let mut curr_col = self_col as f32;
 
-        while min_i < max_i && min_j < max_j{
-            min_i += dir.0;
-            min_j += dir.1;
-            if _map[min_i][min_j] == TileType::Wall{
+        while (dir_c >= 0.0 && curr_col as usize <= other_col || dir_c <= 0.0 && curr_col as usize >= other_col) && (dir_r >= 0.0 && curr_row as usize <= other_row || dir_r <= 0.0 && curr_row as usize >= other_row){
+            if _map[curr_row as usize][curr_col as usize] == TileType::Wall{
                 return false;
             }
+
+            curr_row += dir_r;
+            curr_col += dir_c;
         }
 
         return true;
