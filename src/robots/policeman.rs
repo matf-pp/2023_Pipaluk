@@ -14,7 +14,7 @@ use rand::Rng;
 #[derive(Clone)]
 pub struct Policeman {
     pos: (usize, usize),
-    speed: usize
+    speed: usize,
 }
 
 impl Policeman {
@@ -42,22 +42,21 @@ impl Policeman {
             return;
         }
 
+        // if I hear a citizen plead for help, assist!
         let panic_citizens = citizens
             .into_iter()
             .filter(|&citizen| citizen.mode == CitizenState::PANIC)
             .cloned()
             .collect::<Vec<Citizen>>();
         
-        // if I hear a citizen plead for help, assist!
         if panic_citizens.len() != 0 {
             // map citizens to (distance from policeman, pos)
             let mapped_citizens = panic_citizens
                 .clone()
                 .into_iter()
                 .map(|x| 
-                    (
-                        self.find_shortest_path(x.get_position(), state).len(), self.find_shortest_path(x.get_position(), state)
-                    )
+                    (self.find_shortest_path(x.get_position(), state).len(), 
+                    self.find_shortest_path(x.get_position(), state))
                 )
                 .collect::<Vec<(usize, Vec<(usize, usize)>)>>();
             
@@ -72,15 +71,19 @@ impl Policeman {
                 }
             }
             
-            //println!("Closest citizen: {:?}", panic_citizens[index]);
-            
             let path = (mapped_citizens[index]).1.clone();
+            println!("Path len: {}", path.len());
             
             if self.speed < path.len() {
                 self.pos = path[self.speed];
             }
             else {
-                self.pos = *path.last().unwrap();
+                // FIXME: fix policeman going over the citizen 
+                match path.len() {
+                    1 => {self.pos = path[0]}
+                    2 => {self.pos = path[1]}
+                    _ => {self.pos = path[path.len()-1]}
+                }
             }
             return;
         }
@@ -127,6 +130,7 @@ impl Search for Policeman {
         q.add(((row as isize, col as isize), 0)).unwrap();
         
         visited[row][col] = true;
+        //NOTE: should be removed
         /*for citizen in state.citizens.iter() {
             let (r, c) = citizen.get_position();
             visited[r][c] = true;
@@ -135,6 +139,13 @@ impl Search for Policeman {
             let (r, c) = policeman.get_position();
             visited[r][c] = true;
         }
+        
+        //NOTE: to be added when commando modified
+        /*for commando in state.commandos.iter() {
+            let (r, c) = commando.get_position();
+            visited[r][c] = true;
+        }
+        */
         
         //let dx: Vec<isize> = vec![1, 0, -1, 0, 1, -1, 1, -1];
         //let dy: Vec<isize> = vec![0, 1, 0, -1, 1, -1, -1, 1];

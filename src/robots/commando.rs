@@ -1,4 +1,233 @@
 // these robots move around randomly when they don't see you
 // when they see you, police will try to catch you, and will pursue you till the last location they saw you at
 
+/*extern crate queues;
+use queues::*;
 
+use crate::entity::*;
+use crate::{map::TileType, level::State};
+use crate::robots::citizen::*;
+
+extern crate rand;
+use rand::Rng;
+
+#[derive(Clone)]
+pub struct Commando {
+    pos: (usize, usize),
+    speed: usize,
+    chasing: bool,
+    chase_pos: (usize, usize),
+}
+
+impl Commando {
+    pub fn init(pos: (usize, usize), speed: usize, chasing: bool, chase_pos: (usize, usize)) -> Self {
+        Self {pos, speed, chasing, chase_pos}
+    } 
+    
+    pub fn turn(&mut self, state: &State) {
+        let player_pos = state.player.get_position();
+        let citizens = &state.citizens;
+        
+        // if I see player, chase!
+        let sees_player = self.sees(player_pos, &state.tilemap.tiles);
+        if sees_player {
+            println!("Apprehending suspect!");
+            let player_pos = state.player.get_position();
+            let path = self.find_shortest_path(player_pos, state);
+            
+            self.chase_pos = player_pos;
+            self.chasing = true;
+            
+            if self.speed < path.len() {
+                self.pos = path[self.speed];
+            }
+            else {
+                self.pos = *path.last().unwrap();
+            }
+            
+            return;
+        }
+        else {
+            println!("Chasing the suspect!!");
+            match self.chasing {
+                true => {
+                    let chase_pos = self.chase_pos;
+                    let path = self.find_shortest_path(chase_pos, state);
+                    
+                    if path.len() == 0 {
+                        self.chasing = false;
+                    }
+                    else {
+                        if self.speed < path.len() {
+                            self.pos = path[self.speed];
+                        }
+                        else {
+                            // WARNING: check movement of commando for given destination
+                            match path.len() {
+                                1 => {self.pos = path[0]}
+                                2 => {self.pos = path[1]}
+                                _ => {self.pos = path[path.len()-1]}
+                            }
+                        }
+                    } 
+                    return;
+                },
+                false => return
+            }
+        }
+
+        let panic_citizens = citizens
+            .into_iter()
+            .filter(|&citizen| citizen.mode == CitizenState::PANIC)
+            .cloned()
+            .collect::<Vec<Citizen>>();
+        
+        // if I hear a citizen plead for help, assist!
+        if panic_citizens.len() != 0 {
+            // map citizens to (distance from policeman, pos)
+            let mapped_citizens = panic_citizens
+                .clone()
+                .into_iter()
+                .map(|x| 
+                    (
+                        self.find_shortest_path(x.get_position(), state).len(), self.find_shortest_path(x.get_position(), state)
+                    )
+                )
+                .collect::<Vec<(usize, Vec<(usize, usize)>)>>();
+            
+            // find closest citizen
+            let mut smallest = (mapped_citizens[0]).0;
+            let mut index = 0;
+            
+            for i in 1..mapped_citizens.len() {
+                if (mapped_citizens[i]).0 < smallest { 
+                    smallest = (mapped_citizens[i]).0;
+                    index = i;
+                }
+            }
+            
+            //println!("Closest citizen: {:?}", panic_citizens[index]);
+            
+            let path = (mapped_citizens[index]).1.clone();
+            
+            if self.speed < path.len() {
+                self.pos = path[self.speed];
+            }
+            else {
+                self.pos = *path.last().unwrap();
+            }
+            return;
+        }
+
+        // otherwise wander aimlessly...
+        println!("Patrolling.");
+        loop {
+            let delta: Vec<(isize, isize)> = vec![(1,0), (-1,0), (0,1), (0,-1)];
+            let i = rand::thread_rng().gen_range(0..3);
+            
+            let x = (self.pos.0 as isize + delta[i].0) as usize;
+            let y = (self.pos.1 as isize + delta[i].1) as usize;
+            
+            if state.tile_free((x, y)) {
+                self.pos = (x, y);
+                return;
+            }
+        }
+    }
+}
+
+impl Entity for Commando {
+    fn get_position(&self) -> (usize, usize) { self.pos }
+}
+
+impl Search for Commando {
+    fn find_shortest_path(&self, end: (usize, usize), state: &State) -> Vec<(usize, usize)> {
+        let mut visited: Vec<Vec<bool>> = vec![];
+        let mut parent: Vec<Vec<(isize, isize)>> = vec![];
+        for i in 0..state.tilemap.tiles.len() {
+            visited.push(vec![]);
+            parent.push(vec![]);
+            for _ in 0..state.tilemap.tiles[i as usize].len() {
+                visited[i].push(false);
+                parent[i].push((-1, -1)); 
+            } 
+        } 
+        
+        let mut q: Queue<((isize, isize), isize)> = Queue::new();
+        let (row, col) = (
+            self.get_position().0 as usize,
+            self.get_position().1 as usize
+        );
+        q.add(((row as isize, col as isize), 0)).unwrap();
+        
+        visited[row][col] = true;
+        //NOTE: should be removed
+        /*for citizen in state.citizens.iter() {
+            let (r, c) = citizen.get_position();
+            visited[r][c] = true;
+        }*/
+        for policeman in state.policemen.iter() {
+            let (r, c) = policeman.get_position();
+            visited[r][c] = true;
+        }
+        
+        //NOTE: to be added when commando modified
+        /*for commando in state.commandos.iter() {
+            let (r, c) = commando.get_position();
+            visited[r][c] = true;
+        }*/
+        
+        //let dx: Vec<isize> = vec![1, 0, -1, 0, 1, -1, 1, -1];
+        //let dy: Vec<isize> = vec![0, 1, 0, -1, 1, -1, -1, 1];
+        let dx: Vec<isize> = vec![1, 0, -1, 0];
+        let dy: Vec<isize> = vec![0, 1, 0, -1];
+        
+        let mut found = false;
+        
+        while q.size() as isize != 0 {
+            if let Ok(curr) = q.peek() {
+                q.remove().unwrap();
+                
+                for i in 0..dx.len() {
+                    let x = (curr.0).0 + dx[i];
+                    let y = (curr.0).1 + dy[i];
+                    let d = curr.1 + 1;
+                    
+                    if x >= 0 && x < state.tilemap.tiles.len() as isize {
+                        if y >= 0 && y < state.tilemap.tiles[x as usize].len() as isize {
+                            let (x, y) = (x as usize, y as usize);
+                            if !visited[x][y] && state.tilemap.tiles[x][y] == TileType::Floor {
+                                q.add(((x as isize, y as isize), d)).unwrap();
+                                visited[x][y] = true;
+                                parent[x][y] = ((curr.0).0, (curr.0).1); 
+                            
+                                if (x,y) == end {found = true; break;}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        if found {
+            let mut it = end;
+            let mut result: Vec<(usize, usize)> = vec![];
+            while parent[it.0][it.1] != (-1, -1) {
+                result.push(it);
+                it = (
+                    parent[it.0][it.1].0 as usize,
+                    parent[it.0][it.1].1 as usize
+                );
+            }
+            
+            result.reverse();
+            result
+        }
+        else {vec![]}
+    }
+}
+
+impl Sight for Commando {
+    const DISTANCE: usize = 5;
+}
+*/
