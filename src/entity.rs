@@ -37,8 +37,8 @@ pub trait Search: Entity {
             visited[r][c] = true;
         }
         
-        // let dx: Vec<isize> = vec![1, 0, -1, 0, 1, -1, 1, -1];
-        // let dy: Vec<isize> = vec![0, 1, 0, -1, 1, -1, -1, 1];
+        //let dx: Vec<isize> = vec![1, 0, -1, 0, 1, -1, 1, -1];
+        //let dy: Vec<isize> = vec![0, 1, 0, -1, 1, -1, -1, 1];
         let dx: Vec<isize> = vec![1, 0, -1, 0];
         let dy: Vec<isize> = vec![0, 1, 0, -1];
         

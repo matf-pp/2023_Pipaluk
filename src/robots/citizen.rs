@@ -4,24 +4,13 @@
 use crate::entity::*;
 use crate::level::State;
 
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CitizenState { CALM, PANIC }
 
-#[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Citizen {
     pos: (usize, usize),
     pub mode: CitizenState
-}
-
-// Ordering for citizen positions
-use std::cmp::Ordering;
-impl Ord for Citizen {
-    fn cmp(&self, other: &Self) -> Ordering {
-        let x = self.get_position(); 
-        let y = other.get_position();
-        
-        return x.cmp(&y);
-    }
 }
 
 impl Citizen {
