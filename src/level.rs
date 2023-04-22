@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use crate::loader;
 use crate::animation::Animation;
 use crate::map::{Map, TileType};
-use crate::entity::{Entity, Search};
+use crate::entity::{Entity, Search, Sight};
 use crate::player::Player;
 use crate::robots::citizen::*;
 use crate::robots::policeman::*;
@@ -320,6 +320,10 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
     drawables.sort_by_key(|d| d.key);
     for drawable in drawables.iter() {
         let tex = sprites.get_mut(drawable.texture.as_str()).unwrap();
+        let (row, col) = drawable.key;
+        if !state.player.sees((row, col), &state.tilemap.tiles) {
+            tex.set_alpha_mod(128);
+        }
         canvas.copy_ex(
             tex, 
             None,
@@ -334,6 +338,7 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
             drawable.flipped, 
             false
         ).unwrap();
+        tex.set_alpha_mod(255);
     }
     canvas.present();
 } 

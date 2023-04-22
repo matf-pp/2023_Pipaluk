@@ -24,5 +24,5 @@ impl Entity for Player {
 impl Search for Player {}
 
 impl Sight for Player {
-    const DISTANCE: usize = 5;
+    const DISTANCE: usize = 7;
 }
