@@ -96,22 +96,26 @@ pub trait Sight: Entity {
         if self_row.abs_diff(other_row) + self_col.abs_diff(other_col) > Self::DISTANCE {return false;}
         if (self_row, self_col) == (other_row, other_col) {return true;}
         
-        let mut dir_c: f32 = other_col as f32 - self_col as f32;
-        let mut dir_r: f32 = other_row as f32 - self_row as f32;
-        let norm = (dir_r*dir_r + dir_c*dir_c).sqrt();
-        dir_r /= norm * 2.0;
-        dir_c /= norm * 2.0;
-
+        let mut dir_col: f32 = other_col as f32 - self_col as f32;
+        let mut dir_row: f32 = other_row as f32 - self_row as f32;
+        let norm = (dir_row*dir_row + dir_col*dir_col).sqrt();
+        dir_row /= norm;
+        dir_col /= norm;
+        
         let mut curr_row = self_row as f32;
         let mut curr_col = self_col as f32;
 
-        while (dir_c >= 0.0 && curr_col as usize <= other_col || dir_c <= 0.0 && curr_col as usize >= other_col) && (dir_r >= 0.0 && curr_row as usize <= other_row || dir_r <= 0.0 && curr_row as usize >= other_row){
-            if _map[curr_row as usize][curr_col as usize] == TileType::Wall{
+        while (dir_col >= 0.0 && curr_col.round() as usize <= other_col || 
+               dir_col <= 0.0 && curr_col.round() as usize >= other_col) &&
+              (dir_row >= 0.0 && curr_row.round() as usize <= other_row || 
+               dir_row <= 0.0 && curr_row.round() as usize >= other_row){
+
+            if _map[curr_row.round() as usize][curr_col.round() as usize] == TileType::Wall{
                 return false;
             }
 
-            curr_row += dir_r;
-            curr_col += dir_c;
+            curr_row += dir_row;
+            curr_col += dir_col;
         }
 
         return true;
