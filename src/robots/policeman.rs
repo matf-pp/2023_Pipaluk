@@ -33,6 +33,8 @@ impl Policeman {
             let player_pos = state.player.get_position();
             let path = self.find_shortest_path(player_pos, state);
             
+            if path.len() == 0 {return;}
+            
             if self.speed < path.len() {
                 self.pos = path[self.speed];
             }
@@ -51,7 +53,7 @@ impl Policeman {
         
         if panic_citizens.len() != 0 {
             // map citizens to (distance from policeman, pos)
-            let mapped_citizens = panic_citizens
+            let mut mapped_citizens = panic_citizens
                 .clone()
                 .into_iter()
                 .map(|x| 
@@ -61,29 +63,16 @@ impl Policeman {
                 .collect::<Vec<(usize, Vec<(usize, usize)>)>>();
             
             // find closest citizen
-            let mut smallest = (mapped_citizens[0]).0;
-            let mut index = 0;
+            mapped_citizens.sort_by(|x, y| x.0.cmp(&y.0));
+            let path = &mapped_citizens[0].1;
             
-            for i in 1..mapped_citizens.len() {
-                if (mapped_citizens[i]).0 < smallest { 
-                    smallest = (mapped_citizens[i]).0;
-                    index = i;
-                }
-            }
-            
-            let path = (mapped_citizens[index]).1.clone();
-            println!("Path len: {}", path.len());
-            
-            if self.speed < path.len() {
-                self.pos = path[self.speed];
+            println!("[POLICEMAN] Path to citizen len: {}", path.len());
+            if path.len() <= 1 {return;}
+            else if self.speed >= path.len() {
+                self.pos = path[path.len()-2];
             }
             else {
-                // FIXME: fix policeman going over the citizen 
-                match path.len() {
-                    1 => {self.pos = path[0]}
-                    2 => {self.pos = path[1]}
-                    _ => {self.pos = path[path.len()-1]}
-                }
+                self.pos = path[self.speed-1];
             }
             return;
         }
@@ -130,22 +119,23 @@ impl Search for Policeman {
         q.add(((row as isize, col as isize), 0)).unwrap();
         
         visited[row][col] = true;
-        //NOTE: should be removed
-        /*for citizen in state.citizens.iter() {
-            let (r, c) = citizen.get_position();
-            visited[r][c] = true;
-        }*/
+        for citizen in state.citizens.iter() {
+            if citizen.get_position() != end {
+                let (r, c) = citizen.get_position();
+                visited[r][c] = true;
+            }
+        }
+        
         for policeman in state.policemen.iter() {
             let (r, c) = policeman.get_position();
             visited[r][c] = true;
         }
         
-        //NOTE: to be added when commando modified
-        /*for commando in state.commandos.iter() {
+        for commando in state.commandos.iter() {
             let (r, c) = commando.get_position();
             visited[r][c] = true;
         }
-        */
+        
         
         //let dx: Vec<isize> = vec![1, 0, -1, 0, 1, -1, 1, -1];
         //let dy: Vec<isize> = vec![0, 1, 0, -1, 1, -1, -1, 1];

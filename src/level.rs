@@ -16,7 +16,7 @@ use crate::entity::{Entity, Search, Sight};
 use crate::player::Player;
 use crate::robots::citizen::*;
 use crate::robots::policeman::*;
-//use crate::robots::commando::*;
+use crate::robots::commando::*;
 
 extern crate sdl2;
 
@@ -33,7 +33,7 @@ pub struct State {
     pub player: Player,
     pub citizens: Vec<Citizen>,
     pub policemen: Vec<Policeman>,
-    //pub commandos: Vec<Commando>,
+    pub commandos: Vec<Commando>,
     pub animation: Option<Animation>,
     pub trail: Vec<(usize, usize)>,
     pub goal: (usize, usize)
@@ -52,16 +52,16 @@ impl State {
             .iter()
             .map(|&p| Policeman::init(p.0, p.1))
             .collect();
-        /*let commandos: Vec<Commando> = level.commandos
+        let commandos: Vec<Commando> = level.commandos
             .iter()
-            .map(|&c| Commando::init(c.0, c.1, c.2, c.3))
-            .collect();*/
+            .map(|&c| Commando::init(c.0, c.1))
+            .collect();
         Self {
             tilemap: tilemap,
             player: player,
             citizens: citizens,
             policemen: policemen,
-            //commandos: commandos,
+            commandos: commandos,
             animation: None,
             trail: vec![],
             goal: (0, 0)
@@ -198,13 +198,13 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
     }
     
     // commandos turn
-    /*println!("Commandos turn...");
+    println!("Commandos turn...");
     for i in 0..state.commandos.len() {
         let state_copy = state.clone();
         state.commandos[i].turn(&state_copy);
         render(canvas, sprites, state);
         std::thread::sleep(std::time::Duration::from_millis(100));
-    }*/
+    }
 }
 
 struct Drawable {
@@ -308,11 +308,11 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
     }
     
     // add commandos
-    /*for commando in state.commandos.iter() {
+    for commando in state.commandos.iter() {
         let (row, col) = commando.get_position();
         let (x, y) = state.tilemap.get_tile_pos(row as usize, col as usize);
-        drawables.push(Drawable::init("commando".to_string(), x+6, y-6, false, (row, col)));
-    }*/
+        drawables.push(Drawable::init("policeman".to_string(), x+6, y-6, false, (row, col)));
+    }
 
     // sort and draw everything
     canvas.set_draw_color(Color::WHITE);

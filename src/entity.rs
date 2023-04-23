@@ -36,6 +36,10 @@ pub trait Search: Entity {
             let (r, c) = policeman.get_position();
             visited[r][c] = true;
         }
+        for commando in state.commandos.iter() {
+            let (r, c) = commando.get_position();
+            visited[r][c] = true;
+        }
         
         //let dx: Vec<isize> = vec![1, 0, -1, 0, 1, -1, 1, -1];
         //let dy: Vec<isize> = vec![0, 1, 0, -1, 1, -1, -1, 1];

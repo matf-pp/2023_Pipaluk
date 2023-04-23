@@ -1,7 +1,7 @@
 // these robots move around randomly when they don't see you
 // when they see you, police will try to catch you, and will pursue you till the last location they saw you at
 
-/*extern crate queues;
+extern crate queues;
 use queues::*;
 
 use crate::entity::*;
@@ -16,12 +16,12 @@ pub struct Commando {
     pos: (usize, usize),
     speed: usize,
     chasing: bool,
-    chase_pos: (usize, usize),
+    chase_pos: Option<(usize, usize)>
 }
 
 impl Commando {
-    pub fn init(pos: (usize, usize), speed: usize, chasing: bool, chase_pos: (usize, usize)) -> Self {
-        Self {pos, speed, chasing, chase_pos}
+    pub fn init(pos: (usize, usize), speed: usize) -> Self {
+        Self {pos, speed, chasing: false, chase_pos: None}
     } 
     
     pub fn turn(&mut self, state: &State) {
@@ -33,10 +33,12 @@ impl Commando {
         if sees_player {
             println!("Apprehending suspect!");
             let player_pos = state.player.get_position();
+            self.chase_pos = Some(player_pos);
+            self.chasing = true;
+            
             let path = self.find_shortest_path(player_pos, state);
             
-            self.chase_pos = player_pos;
-            self.chasing = true;
+            if path.len() == 0 {return;}
             
             if self.speed < path.len() {
                 self.pos = path[self.speed];
@@ -44,81 +46,62 @@ impl Commando {
             else {
                 self.pos = *path.last().unwrap();
             }
-            
             return;
         }
-        else {
-            println!("Chasing the suspect!!");
-            match self.chasing {
-                true => {
-                    let chase_pos = self.chase_pos;
-                    let path = self.find_shortest_path(chase_pos, state);
-                    
-                    if path.len() == 0 {
-                        self.chasing = false;
-                    }
-                    else {
-                        if self.speed < path.len() {
-                            self.pos = path[self.speed];
-                        }
-                        else {
-                            // WARNING: check movement of commando for given destination
-                            match path.len() {
-                                1 => {self.pos = path[0]}
-                                2 => {self.pos = path[1]}
-                                _ => {self.pos = path[path.len()-1]}
-                            }
-                        }
-                    } 
-                    return;
-                },
-                false => return
-            }
-        }
 
+        // if I hear a citizen plead for help, assist!
         let panic_citizens = citizens
             .into_iter()
             .filter(|&citizen| citizen.mode == CitizenState::PANIC)
             .cloned()
             .collect::<Vec<Citizen>>();
         
-        // if I hear a citizen plead for help, assist!
         if panic_citizens.len() != 0 {
             // map citizens to (distance from policeman, pos)
-            let mapped_citizens = panic_citizens
+            let mut mapped_citizens = panic_citizens
                 .clone()
                 .into_iter()
                 .map(|x| 
-                    (
-                        self.find_shortest_path(x.get_position(), state).len(), self.find_shortest_path(x.get_position(), state)
-                    )
+                    (self.find_shortest_path(x.get_position(), state).len(), 
+                    self.find_shortest_path(x.get_position(), state))
                 )
                 .collect::<Vec<(usize, Vec<(usize, usize)>)>>();
             
             // find closest citizen
-            let mut smallest = (mapped_citizens[0]).0;
-            let mut index = 0;
+            mapped_citizens.sort_by(|x, y| x.0.cmp(&y.0));
+            let path = &mapped_citizens[0].1;
             
-            for i in 1..mapped_citizens.len() {
-                if (mapped_citizens[i]).0 < smallest { 
-                    smallest = (mapped_citizens[i]).0;
-                    index = i;
-                }
-            }
-            
-            //println!("Closest citizen: {:?}", panic_citizens[index]);
-            
-            let path = (mapped_citizens[index]).1.clone();
-            
-            if self.speed < path.len() {
-                self.pos = path[self.speed];
+            println!("[COMMANDO] Path to citizen len: {}", path.len());
+            if path.len() <= 1 {return;}
+            else if self.speed >= path.len() {
+                self.pos = path[path.len()-2];
             }
             else {
-                self.pos = *path.last().unwrap();
+                self.pos = path[self.speed-1];
             }
             return;
         }
 
+        if self.chasing {
+            // going to place where player last seen
+            match self.chase_pos {
+                Some(chase_pos) => {
+                    let path = self.find_shortest_path(chase_pos, state);
+                
+                    if path.len() == 0 {return;}
+                    
+                    if self.speed < path.len() {
+                        self.pos = path[self.speed];
+                    }
+                    else {
+                        self.pos = *path.last().unwrap();
+                    }
+                    return;
+                },
+                None => {}
+            }
+        }
+        
         // otherwise wander aimlessly...
         println!("Patrolling.");
         loop {
@@ -161,21 +144,22 @@ impl Search for Commando {
         q.add(((row as isize, col as isize), 0)).unwrap();
         
         visited[row][col] = true;
-        //NOTE: should be removed
-        /*for citizen in state.citizens.iter() {
-            let (r, c) = citizen.get_position();
-            visited[r][c] = true;
-        }*/
+        for citizen in state.citizens.iter() {
+            if citizen.get_position() != end {
+                let (r, c) = citizen.get_position();
+                visited[r][c] = true;
+            }
+        }
+        
         for policeman in state.policemen.iter() {
             let (r, c) = policeman.get_position();
             visited[r][c] = true;
         }
         
-        //NOTE: to be added when commando modified
-        /*for commando in state.commandos.iter() {
+        for commando in state.commandos.iter() {
             let (r, c) = commando.get_position();
             visited[r][c] = true;
-        }*/
+        }
         
         //let dx: Vec<isize> = vec![1, 0, -1, 0, 1, -1, 1, -1];
         //let dy: Vec<isize> = vec![0, 1, 0, -1, 1, -1, -1, 1];
@@ -230,4 +214,4 @@ impl Search for Commando {
 impl Sight for Commando {
     const DISTANCE: usize = 5;
 }
-*/
+
