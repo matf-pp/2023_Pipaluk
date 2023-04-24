@@ -101,7 +101,7 @@ pub fn play_level(
     // load all sprites
     let mut sprites: HashMap<String, Texture> = HashMap::new();
     let common_textures = vec![
-        "highlight", "citizen", "policeman", 
+        "highlight", "citizen_calm", "citizen_alert", "police_calm", "police_alert", "commando_calm", "commando_alert", 
         "cat_idle_1", "cat_run_0", "cat_run_1", "cat_run_2", "cat_run_3", "cat_run_4"
     ];
     for name in common_textures.iter() { 
@@ -297,21 +297,21 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
     for citizen in state.citizens.iter() {
         let (row, col) = citizen.get_position();
         let (x, y) = state.tilemap.get_tile_pos(row as usize, col as usize);
-        drawables.push(Drawable::init("citizen".to_string(), x+6, y-6, false, (row, col)));
+        drawables.push(Drawable::init("citizen_calm".to_string(), x+6, y-6, false, (row, col)));
     }
     
     // add policemen
     for policeman in state.policemen.iter() {
         let (row, col) = policeman.get_position();
         let (x, y) = state.tilemap.get_tile_pos(row as usize, col as usize);
-        drawables.push(Drawable::init("policeman".to_string(), x+6, y-6, false, (row, col)));
+        drawables.push(Drawable::init("police_calm".to_string(), x+6, y-6, false, (row, col)));
     }
     
     // add commandos
     for commando in state.commandos.iter() {
         let (row, col) = commando.get_position();
         let (x, y) = state.tilemap.get_tile_pos(row as usize, col as usize);
-        drawables.push(Drawable::init("policeman".to_string(), x+6, y-6, false, (row, col)));
+        drawables.push(Drawable::init("commando_calm".to_string(), x+6, y-6, false, (row, col)));
     }
 
     // sort and draw everything
@@ -322,7 +322,8 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
         let tex = sprites.get_mut(drawable.texture.as_str()).unwrap();
         let (row, col) = drawable.key;
         if !state.player.sees((row, col), &state.tilemap.tiles) {
-            tex.set_alpha_mod(128);
+            // tex.set_alpha_mod(128);
+            tex.set_color_mod(128, 128, 128);
         }
         canvas.copy_ex(
             tex, 
@@ -338,7 +339,8 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
             drawable.flipped, 
             false
         ).unwrap();
-        tex.set_alpha_mod(255);
+        // tex.set_alpha_mod(255);
+        tex.set_color_mod(255, 255, 255);
     }
     canvas.present();
 } 
