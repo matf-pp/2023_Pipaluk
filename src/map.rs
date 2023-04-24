@@ -1,5 +1,7 @@
 use sdl2::render::{ WindowCanvas };
 
+use crate::{player::Player, entity::Sight};
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum TileType {
     None,
@@ -15,9 +17,11 @@ pub struct Map {
     bottommost: i32,
     leftmost: i32,
     rightmost: i32,
-    pub scale: u32, 
+    desired_translation_x: i32,
+    desired_translation_y: i32,
+    pub scale: u32,
     pub translation_x: i32,
-    pub translation_y: i32,
+    pub translation_y: i32
 }
 
 impl Map {
@@ -28,6 +32,8 @@ impl Map {
             bottommost: std::i32::MIN,
             leftmost: std::i32::MAX,
             rightmost: std::i32::MIN,
+            desired_translation_x: 0,
+            desired_translation_y: 0,
             scale: 1,
             translation_x: 0,
             translation_y: 0
@@ -60,24 +66,70 @@ impl Map {
         (x as u32, y as u32)
     }
 
-    // calculate and get scale and translation vector needed to center and fill canvas with tilemap
-    pub fn calc_scale_and_translation(&mut self, canvas: &mut WindowCanvas) -> (u32, (i32, i32)) {
+    pub fn calc_view(&mut self) {
+        let x = self.desired_translation_x - self.translation_x;
+        let y = self.desired_translation_y - self.translation_y;
+
+        self.translation_x += (x as f32 * 0.1) as i32;
+        self.translation_y += (y as f32 * 0.1) as i32;
+    }
+
+    pub fn calc_scale_translation_debug(&mut self, canvas: &mut WindowCanvas) -> u32 {
+        let (canvas_x, canvas_y) = canvas.output_size().unwrap();
+        let (map_x, map_y) = self.get_dimensions();
+
+        self.scale = (canvas_x as f32 / map_x as f32).min(canvas_y as f32 / map_y as f32) as u32;
+        self.scale = self.scale.max(1);
+
+        self.calc_translation_debug(canvas);
+
+        self.scale
+    }
+
+    pub fn calc_translation_debug(&mut self, canvas: &mut WindowCanvas) -> (i32, i32) {
         let (canvas_x, canvas_y) = canvas.output_size().unwrap();
         let (map_x, map_y) = self.get_dimensions();
         
-        self.scale = (canvas_x as f32 / map_x as f32).min(canvas_y as f32 / map_y as f32) as u32;
-        self.scale = self.scale.max(1);
-        self.translation_x = - self.leftmost * self.scale as i32 + (canvas_x as i32 - map_x as i32 * self.scale as i32) / 2;
-        self.translation_y = - self.topmost * self.scale as i32 + (canvas_y as i32 - map_y as i32 * self.scale as i32) / 2;
+        self.desired_translation_x = - self.leftmost * self.scale as i32 + (canvas_x as i32 - map_x as i32 * self.scale as i32) / 2;
+        self.desired_translation_y = - self.topmost * self.scale as i32 + (canvas_y as i32 - map_y as i32 * self.scale as i32) / 2;
         
-        (self.scale, (self.translation_x, self.translation_y))
+        (self.desired_translation_x, self.desired_translation_y)
+    }
+
+    pub fn calc_scale_translation(&mut self, canvas: &mut WindowCanvas, player_pos: (usize, usize)) -> u32 {
+        let canvas_size = canvas.output_size().unwrap();
+        let canvas_size = (canvas_size.0 as i32, canvas_size.1 as i32);
+        let visible_size = (Player::DISTANCE as i32 * 28 + 50, Player::DISTANCE as i32 * 19 + 50);
+
+        self.scale = (canvas_size.0 as f32 / visible_size.0 as f32).min(canvas_size.1 as f32 / visible_size.1 as f32) as u32;
+        self.scale = self.scale.max(1);
+
+        self.calc_translation(canvas, player_pos);
+
+        self.scale
+    }
+
+    pub fn calc_translation(&mut self, canvas: &mut WindowCanvas, player_pos: (usize, usize)) -> (i32, i32) {
+        let player_pos = self.get_tile_pos(player_pos.0, player_pos.1);
+        let canvas_size = canvas.output_size().unwrap();
+        let canvas_size = (canvas_size.0 as i32, canvas_size.1 as i32);
+
+        self.desired_translation_x = (- player_pos.0) * self.scale as i32 + canvas_size.0 / 2;
+        self.desired_translation_y = (- player_pos.1) * self.scale as i32 + canvas_size.1 / 2;
+        
+        (self.desired_translation_x, self.desired_translation_y)
     }
 
     // debug print tilemap to console
-    pub fn _print(&self) {
+    pub fn print(&self) {
         for row in self.tiles.iter() {
             for cell in row.iter() {
-                print!("{}", *cell as i32);
+                match *cell {
+                    TileType::Floor  => { print!(".") }, 
+                    TileType::Wall   => { print!("#") }, 
+                    TileType::None   => { print!(" ") }, 
+                    TileType::Liquid => { print!("~") }, 
+                }
             }
             println!();
         }

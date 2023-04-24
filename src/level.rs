@@ -9,7 +9,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::mouse::{Cursor, SystemCursor, MouseButton};
 use std::collections::HashMap;
 
-use crate::loader;
+use crate::{loader, DEBUG};
 use crate::animation::Animation;
 use crate::map::{Map, TileType};
 use crate::entity::{Entity, Search, Sight};
@@ -97,8 +97,14 @@ pub fn play_level(
     state.goal = state.player.get_position();
     state.trail = vec![];
 
-    state.tilemap.calc_scale_and_translation(canvas);
-    state.tilemap._print();
+    if DEBUG {
+        state.tilemap.print();
+    }
+
+    match DEBUG {
+        false => { state.tilemap.calc_scale_translation(canvas, state.player.get_position()); },
+        true => { state.tilemap.calc_scale_translation_debug(canvas); }
+    }
     
     // load all sprites
     let mut sprites: HashMap<String, Texture> = HashMap::new();
@@ -110,7 +116,8 @@ pub fn play_level(
         sprites.insert(name.to_string(), texture_creator.load_texture(format!("resources/images/{}.png", *name)).unwrap()); 
     }
     let level_textures = vec![
-        "floor", "liquid", "wall_left", "wall_right", "wall_left_transparent", "wall_right_transparent"
+        "floor", "liquid", "wall_left", "wall_right", "wall_left_transparent", "wall_right_transparent",
+        "border_left", "border_right", "border_corner"
     ];
     for name in level_textures.iter() { 
         sprites.insert(
@@ -149,8 +156,10 @@ pub fn play_level(
                     play_turn(canvas, &mut sprites, &mut state);
                 },
                 Event::Window { win_event: WindowEvent::Resized(_w, _h), ..} => {
-                    let (scale, (translation_x, translation_y)) = state.tilemap.calc_scale_and_translation(canvas);
-                    println!("Window resized : scale={} tx={} ty={}", scale, translation_x, translation_y);
+                    match DEBUG {
+                        false => { state.tilemap.calc_scale_translation(canvas, state.player.get_position()); },
+                        true => { state.tilemap.calc_scale_translation_debug(canvas); }
+                    }
                 },
                 _ => {}
             }
@@ -177,6 +186,10 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
         3
     ));
     while state.animation.is_some() {
+        match DEBUG {
+            false => { state.tilemap.calc_translation(canvas, state.player.get_position()); },
+            true => { state.tilemap.calc_translation_debug(canvas); }
+        }
         render(canvas, sprites, state);
         std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
     }
@@ -231,6 +244,8 @@ impl Drawable {
 
 fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, state: &mut State) {
 
+    state.tilemap.calc_view();
+
     let mut drawables: Vec<Drawable> = vec![];
 
     // add floor tiles & walls
@@ -240,6 +255,24 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
             match state.tilemap.tiles[row][col] {
                 TileType::Floor => { drawables.push(Drawable::init("floor".to_string(), x, y, false, (row, col))); },
                 TileType::Wall => {
+                    match state.tilemap.tiles[row-1][col-1] {
+                        TileType::Wall | TileType::None => {},
+                        _ => {
+                            drawables.push(Drawable::init("border_corner".to_string(), x+12, y+1, false, (row, col)));
+                        }
+                    }
+                    match state.tilemap.tiles[row-1][col] {
+                        TileType::Wall | TileType::None => {},
+                        _ => {
+                            drawables.push(Drawable::init("border_left".to_string(), x+12, y+1, false, (row, col)));
+                        }
+                    }
+                    match state.tilemap.tiles[row][col-1] {
+                        TileType::Wall | TileType::None => {},
+                        _ => {
+                            drawables.push(Drawable::init("border_right".to_string(), x, y+1, false, (row, col)));
+                        }
+                    }
                     match state.tilemap.tiles[row+1][col] {
                         TileType::Wall | TileType::None => {},
                         _ => {
@@ -345,15 +378,21 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
     }
 
     // sort and draw everything
-    canvas.set_draw_color(Color::WHITE);
+    canvas.set_draw_color(Color::BLACK);
     canvas.clear();
     drawables.sort_by_key(|d| d.key);
     for drawable in drawables.iter() {
         let tex = sprites.get_mut(drawable.texture.as_str()).unwrap();
         let (row, col) = drawable.key;
         if !state.player.sees((row, col), &state.tilemap.tiles) {
-            // tex.set_alpha_mod(128);
-            tex.set_color_mod(128, 128, 128);
+            if DEBUG { tex.set_color_mod(128, 128, 128); }
+            else { continue; }
+        }
+        else if !DEBUG {
+            let distance = state.player.distance_to((row, col));
+            let color = 256.0 * (1.0 - (distance / Player::DISTANCE as f32).powf(2.0)).max(0.0);
+            let color = color as u8;
+            tex.set_color_mod(color, color, color); 
         }
         canvas.copy_ex(
             tex, 
@@ -369,7 +408,6 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
             drawable.flipped, 
             false
         ).unwrap();
-        // tex.set_alpha_mod(255);
         tex.set_color_mod(255, 255, 255);
     }
     canvas.present();
