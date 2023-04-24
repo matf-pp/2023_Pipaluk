@@ -100,7 +100,7 @@ pub trait Search: Entity {
 
 pub trait Sight: Entity {
     const DISTANCE: usize;
-    fn sees(&self, target: (usize, usize), _map: &Vec<Vec<TileType>>) -> bool {
+    fn sees(&self, target: (usize, usize), map: &Vec<Vec<TileType>>) -> bool {
         let (self_row, self_col) = self.get_position();
         let (other_row, other_col) = target;
 
@@ -112,17 +112,24 @@ pub trait Sight: Entity {
         let norm = (dir_row*dir_row + dir_col*dir_col).sqrt();
         dir_row /= norm;
         dir_col /= norm;
-        
+
         let mut curr_row = self_row as f32;
         let mut curr_col = self_col as f32;
+
 
         while (dir_col >= 0.0 && curr_col.round() as usize <= other_col || 
                dir_col <= 0.0 && curr_col.round() as usize >= other_col) &&
               (dir_row >= 0.0 && curr_row.round() as usize <= other_row || 
                dir_row <= 0.0 && curr_row.round() as usize >= other_row){
 
-            if _map[curr_row.round() as usize][curr_col.round() as usize] == TileType::Wall{
-                return false;
+            if map[curr_row.round() as usize][curr_col.round() as usize] == TileType::Wall{
+             
+                return false || (curr_row.round() as usize, curr_col.round() as usize) == target
+                || ((curr_row.round() - 1.0) as usize, curr_col.round() as usize) == target
+                || ((curr_row.round() + 1.0) as usize, curr_col.round() as usize) == target
+                || (curr_row.round() as usize, (curr_col.round() - 1.0) as usize) == target
+                || (curr_row.round() as usize, (curr_col.round() + 1.0) as usize) == target
+                && map[other_row][other_col] == TileType::Wall;
             }
 
             curr_row += dir_row;
@@ -131,4 +138,5 @@ pub trait Sight: Entity {
 
         return true;
     }
+
 }
