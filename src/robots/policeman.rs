@@ -51,7 +51,7 @@ impl Policeman {
 
         // otherwise wander aimlessly...
         println!("Patrolling.");
-        loop {
+        for _ in 1..8 {
             let delta: Vec<(isize, isize)> = vec![(1,0), (-1,0), (0,1), (0,-1)];
             let i = rand::thread_rng().gen_range(0..3);
             
@@ -62,6 +62,7 @@ impl Policeman {
                 return vec![(x, y)];
             }
         }
+        return vec![];
     }
 }
 

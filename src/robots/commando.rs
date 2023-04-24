@@ -27,11 +27,18 @@ impl Commando {
     pub fn turn(&mut self, state: &State) -> Vec<(usize, usize)> {
         let player_pos = state.player.get_position();
         let citizens = &state.citizens;
+
+        // if reached searching pos, reset
+        if self.chase_pos.is_some() && self.chase_pos.unwrap() == self.get_position() {
+            println!("[COMMANDO] We lost 'em!");
+            self.chasing = false;
+            self.chase_pos = None;
+        }
         
         // if I see player, chase!
         let sees_player = self.sees(player_pos, &state.tilemap.tiles);
         if sees_player {
-            println!("Apprehending suspect!");
+            println!("[COMMANDO] Apprehending suspect!");
             let player_pos = state.player.get_position();
             self.chase_pos = Some(player_pos);
             self.chasing = true;
@@ -47,6 +54,7 @@ impl Commando {
             .cloned()
             .collect::<Vec<Citizen>>();
         if panic_citizens.len() != 0 {
+            println!("[COMMANDO] Assisting citizen!");
             let closest = panic_citizens.iter().min_by_key(|k| k.distance_to(self.get_position()) as i32).unwrap();
             let mut path = self.find_shortest_path(closest.get_position(), state);
             unsafe { path.set_len(self.speed.min(path.len())) };
@@ -55,6 +63,8 @@ impl Commando {
 
         if self.chasing {
             // going to place where player last seen
+            println!("[COMMANDO] Searching for suspect.");
+            println!("{:?}", self.chase_pos);
             match self.chase_pos {
                 Some(chase_pos) => {
                     let mut path = self.find_shortest_path(chase_pos, state);
@@ -66,8 +76,8 @@ impl Commando {
         }
         
         // otherwise wander aimlessly...
-        println!("Patrolling.");
-        loop {
+        println!("[COMMANDO] Patrolling.");
+        for _ in 1..8 {
             let delta: Vec<(isize, isize)> = vec![(1,0), (-1,0), (0,1), (0,-1)];
             let i = rand::thread_rng().gen_range(0..3);
             
@@ -78,6 +88,7 @@ impl Commando {
                 return vec![(x, y)];
             }
         }
+        return vec![];
     }
 }
 

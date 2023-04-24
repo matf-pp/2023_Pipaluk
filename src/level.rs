@@ -20,6 +20,8 @@ use crate::robots::commando::*;
 
 extern crate sdl2;
 
+const FRAME_DURATION: u64 = 50;
+
 #[derive(PartialEq)]
 pub enum GameResult {
     Quit,
@@ -155,7 +157,7 @@ pub fn play_level(
         }
 
         render(canvas, &mut sprites, &mut state);
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
     }
 
     // return GameResult::Victory;
@@ -176,7 +178,7 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
     ));
     while state.animation.is_some() {
         render(canvas, sprites, state);
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
     }
 
     // citizens turn
@@ -186,7 +188,7 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
         for tile in state.citizens[i].turn(&state_copy).iter() {
             state.citizens[i].set_position(*tile);
             render(canvas, sprites, state);
-            std::thread::sleep(std::time::Duration::from_millis(100));
+            std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
         }
     }
     
@@ -197,7 +199,7 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
         for tile in state.policemen[i].turn(&state_copy).iter() {
             state.policemen[i].set_position(*tile);
             render(canvas, sprites, state);
-            std::thread::sleep(std::time::Duration::from_millis(100));
+            std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
         }
     }
     
@@ -208,7 +210,7 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
         for tile in state.commandos[i].turn(&state_copy).iter() {
             state.commandos[i].set_position(*tile);
             render(canvas, sprites, state);
-            std::thread::sleep(std::time::Duration::from_millis(100));
+            std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
         }
     }
 }
