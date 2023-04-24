@@ -43,7 +43,8 @@ impl Commando {
             self.chase_pos = Some(player_pos);
             self.chasing = true;
             
-            let path = self.find_shortest_path(player_pos, state);
+            let mut path = self.find_shortest_path(player_pos, state);
+            unsafe { path.set_len(self.speed.min(path.len())) };
             return path;
         }
 

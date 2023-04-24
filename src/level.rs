@@ -305,21 +305,43 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
     for citizen in state.citizens.iter() {
         let (row, col) = citizen.get_position();
         let (x, y) = state.tilemap.get_tile_pos(row as usize, col as usize);
-        drawables.push(Drawable::init("citizen_calm".to_string(), x+6, y-6, false, (row, col)));
+        match citizen.mode {
+            CitizenState::CALM => {
+                drawables.push(Drawable::init("citizen_calm".to_string(), x+6, y-6, false, (row, col)));
+            },
+            CitizenState::PANIC => {
+                drawables.push(Drawable::init("citizen_alert".to_string(), x+6, y-6, false, (row, col)));
+            }
+        }
     }
     
     // add policemen
     for policeman in state.policemen.iter() {
         let (row, col) = policeman.get_position();
         let (x, y) = state.tilemap.get_tile_pos(row as usize, col as usize);
-        drawables.push(Drawable::init("police_calm".to_string(), x+6, y-6, false, (row, col)));
+        match policeman.sees(state.player.get_position(), &state.tilemap.tiles) {
+            true => {
+                drawables.push(Drawable::init("police_alert".to_string(), x+6, y-6, false, (row, col)));
+
+            },
+            false => {
+                drawables.push(Drawable::init("police_calm".to_string(), x+6, y-6, false, (row, col)));
+            }
+        }
     }
     
     // add commandos
     for commando in state.commandos.iter() {
         let (row, col) = commando.get_position();
         let (x, y) = state.tilemap.get_tile_pos(row as usize, col as usize);
-        drawables.push(Drawable::init("commando_calm".to_string(), x+6, y-6, false, (row, col)));
+        match commando.sees(state.player.get_position(), &state.tilemap.tiles) {
+            true => {
+                drawables.push(Drawable::init("commando_alert".to_string(), x+6, y-6, false, (row, col)));
+            },
+            false => {
+                drawables.push(Drawable::init("commando_calm".to_string(), x+6, y-6, false, (row, col)));
+            }
+        }
     }
 
     // sort and draw everything
