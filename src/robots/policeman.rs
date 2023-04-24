@@ -22,7 +22,7 @@ impl Policeman {
         Self {pos, speed}
     } 
     
-    pub fn turn(&mut self, state: &State) {
+    pub fn turn(&mut self, state: &State) -> Vec<(usize, usize)> {
         let player_pos = state.player.get_position();
         let citizens = &state.citizens;
         
@@ -31,50 +31,22 @@ impl Policeman {
         if sees_player {
             println!("Apprehending suspect!");
             let player_pos = state.player.get_position();
-            let path = self.find_shortest_path(player_pos, state);
-            
-            if path.len() == 0 {return;}
-            
-            if self.speed < path.len() {
-                self.pos = path[self.speed];
-            }
-            else {
-                self.pos = *path.last().unwrap();
-            }
-            return;
+            let mut path = self.find_shortest_path(player_pos, state);
+            unsafe { path.set_len(self.speed.min(path.len())) };
+            return path;
         }
 
-        // if I hear a citizen plead for help, assist!
+        // if I hear a citizen plead for help, assist! (if multiple, chose closest)
         let panic_citizens = citizens
             .into_iter()
             .filter(|&citizen| citizen.mode == CitizenState::PANIC)
             .cloned()
             .collect::<Vec<Citizen>>();
-        
         if panic_citizens.len() != 0 {
-            // map citizens to (distance from policeman, pos)
-            let mut mapped_citizens = panic_citizens
-                .clone()
-                .into_iter()
-                .map(|x| 
-                    (self.find_shortest_path(x.get_position(), state).len(), 
-                    self.find_shortest_path(x.get_position(), state))
-                )
-                .collect::<Vec<(usize, Vec<(usize, usize)>)>>();
-            
-            // find closest citizen
-            mapped_citizens.sort_by(|x, y| x.0.cmp(&y.0));
-            let path = &mapped_citizens[0].1;
-            
-            println!("[POLICEMAN] Path to citizen len: {}", path.len());
-            if path.len() <= 1 {return;}
-            else if self.speed >= path.len() {
-                self.pos = path[path.len()-2];
-            }
-            else {
-                self.pos = path[self.speed-1];
-            }
-            return;
+            let closest = panic_citizens.iter().min_by_key(|k| k.distance_to(self.get_position()) as i32).unwrap();
+            let mut path = self.find_shortest_path(closest.get_position(), state);
+            unsafe { path.set_len(self.speed.min(path.len())) };
+            return path;
         }
 
         // otherwise wander aimlessly...
@@ -87,8 +59,7 @@ impl Policeman {
             let y = (self.pos.1 as isize + delta[i].1) as usize;
             
             if state.tile_free((x, y)) {
-                self.pos = (x, y);
-                return;
+                return vec![(x, y)];
             }
         }
     }
@@ -96,6 +67,9 @@ impl Policeman {
 
 impl Entity for Policeman {
     fn get_position(&self) -> (usize, usize) { self.pos }
+    fn set_position(&mut self, tile: (usize, usize)) {
+        self.pos = tile;
+    }
 }
 
 impl Search for Policeman {

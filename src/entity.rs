@@ -5,6 +5,13 @@ use queues::*;
 
 pub trait Entity {
     fn get_position(&self) -> (usize, usize);
+    fn set_position(&mut self, tile: (usize, usize));
+    fn distance_to(&self, other: (usize, usize)) -> f32 {
+        let (self_row, self_col) = self.get_position();
+        let (other_row, other_col) = other;
+        let squared = (self_row as i32 - other_row as i32).pow(2) + (self_col as i32 - other_col as i32).pow(2);
+        (squared as f32).sqrt()
+    }
 }
 
 pub trait Search: Entity {
@@ -97,7 +104,7 @@ pub trait Sight: Entity {
         let (self_row, self_col) = self.get_position();
         let (other_row, other_col) = target;
 
-        if self_row.abs_diff(other_row) + self_col.abs_diff(other_col) > Self::DISTANCE {return false;}
+        if self.distance_to(target) > Self::DISTANCE as f32 {return false;}
         if (self_row, self_col) == (other_row, other_col) {return true;}
         
         let mut dir_col: f32 = other_col as f32 - self_col as f32;

@@ -19,6 +19,9 @@ impl Player {
 
 impl Entity for Player {
     fn get_position(&self) -> (usize, usize) { self.pos }
+    fn set_position(&mut self, tile: (usize, usize)) {
+        self.pos = tile;
+    }
 }
 
 impl Search for Player {}

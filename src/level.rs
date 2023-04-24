@@ -183,27 +183,33 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
     println!("Citizens turn...");
     for i in 0..state.citizens.len() {
         let state_copy = state.clone();
-        state.citizens[i].turn(&state_copy);
-        render(canvas, sprites, state);
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        for tile in state.citizens[i].turn(&state_copy).iter() {
+            state.citizens[i].set_position(*tile);
+            render(canvas, sprites, state);
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
     }
     
     // policemen turn
     println!("Policemen turn...");
     for i in 0..state.policemen.len() {
         let state_copy = state.clone();
-        state.policemen[i].turn(&state_copy);
-        render(canvas, sprites, state);
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        for tile in state.policemen[i].turn(&state_copy).iter() {
+            state.policemen[i].set_position(*tile);
+            render(canvas, sprites, state);
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
     }
     
     // commandos turn
     println!("Commandos turn...");
     for i in 0..state.commandos.len() {
         let state_copy = state.clone();
-        state.commandos[i].turn(&state_copy);
-        render(canvas, sprites, state);
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        for tile in state.commandos[i].turn(&state_copy).iter() {
+            state.commandos[i].set_position(*tile);
+            render(canvas, sprites, state);
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
     }
 }
 
