@@ -1,3 +1,5 @@
+extern crate sdl2;
+
 use sdl2::surface::Surface;
 use sdl2::ttf::Font;
 use sdl2::EventPump;
@@ -8,7 +10,7 @@ use sdl2::video::WindowContext;
 use sdl2::rect::{Rect, Point};
 use sdl2::event::Event;
 
-extern crate sdl2;
+use crate::mixer::Mixer;
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum MenuAction {
@@ -106,8 +108,10 @@ pub fn show_menu(
     texture_creator: &TextureCreator<WindowContext>,
     event_pump: &mut EventPump,
     font: &mut Font,
+    music_mixer: &mut Mixer
 ) -> MenuAction {
     println!("SHOW MENU");
+    music_mixer.play_song("slow");
 
     let background = texture_creator.load_texture("resources/images/menu_background.png").unwrap();
     let foreground = texture_creator.load_texture("resources/images/menu_foreground.png").unwrap();

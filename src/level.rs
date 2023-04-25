@@ -9,6 +9,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::mouse::{Cursor, SystemCursor, MouseButton};
 use std::collections::HashMap;
 
+use crate::mixer::Mixer;
 use crate::{loader, DEBUG};
 use crate::animation::Animation;
 use crate::map::{Map, TileType};
@@ -85,10 +86,13 @@ pub fn play_level(
     canvas: &mut WindowCanvas, 
     texture_creator: &TextureCreator<WindowContext>,
     event_pump: &mut EventPump,
+    music_mixer: &mut Mixer,
     name: &str
 ) -> GameResult {
     let cursor = Cursor::from_system(SystemCursor::Crosshair).unwrap();
     cursor.set();
+
+    music_mixer.play_song("slow");
 
     // load level data and initialize game state
     let level = loader::load_level("resources/levels/".to_string() + name + ".json");
