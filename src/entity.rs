@@ -12,6 +12,16 @@ pub trait Entity {
         let squared = (self_row as i32 - other_row as i32).pow(2) + (self_col as i32 - other_col as i32).pow(2);
         (squared as f32).sqrt()
     }
+    fn get_vector(&self, other: (f32, f32)) -> (f32, f32){
+        let(self_row, self_col) = self.get_position();
+        let mut dir_row: f32 = other.0 - self_row as f32;
+        let mut dir_col: f32 = other.1 - self_col as f32;
+        let norm = (dir_row*dir_row + dir_col*dir_col).sqrt();
+        dir_row /= norm;
+        dir_col /= norm;
+
+        return (dir_row, dir_col);
+    }
 }
 
 pub trait Search: Entity {
@@ -116,6 +126,10 @@ pub trait Sight: Entity {
         let mut curr_row = self_row as f32;
         let mut curr_col = self_col as f32;
 
+        println!("CAT: {} {}", self_row,self_col);
+        println!("TARGET: {} {}", other_row, other_col);
+        println!("DIR = {} {}", dir_row, dir_col);
+
 
         while (dir_col >= 0.0 && curr_col.round() as usize <= other_col || 
                dir_col <= 0.0 && curr_col.round() as usize >= other_col) &&
@@ -123,13 +137,21 @@ pub trait Sight: Entity {
                dir_row <= 0.0 && curr_row.round() as usize >= other_row){
 
             if map[curr_row.round() as usize][curr_col.round() as usize] == TileType::Wall{
-             
-                return false || (curr_row.round() as usize, curr_col.round() as usize) == target
-                || ((curr_row.round() - 1.0) as usize, curr_col.round() as usize) == target
-                || ((curr_row.round() + 1.0) as usize, curr_col.round() as usize) == target
-                || (curr_row.round() as usize, (curr_col.round() - 1.0) as usize) == target
-                || (curr_row.round() as usize, (curr_col.round() + 1.0) as usize) == target
-                && map[other_row][other_col] == TileType::Wall;
+
+                if map[other_row][other_col] != TileType::Wall{ println!("nije zid");return false;}
+                if (curr_row.round() as usize, curr_col.round() as usize) == target{println!("Cilj");return true;}
+
+               //checks for angles smaller that 45deg
+                let row_check: bool = ((curr_row.round() - 1.0) as usize, curr_col.round() as usize) == target
+                || ((curr_row.round() + 1.0) as usize, curr_col.round() as usize) == target && dir_row.abs() >= 0.7;
+
+                let col_check: bool = (curr_row.round() as usize, (curr_col.round() - 1.0) as usize) == target
+                || (curr_row.round() as usize, (curr_col.round() + 1.0) as usize) == target && dir_col.abs() >= 0.7;
+                
+                let angle_check = row_check && !col_check || col_check && !row_check;
+
+                return angle_check;
+            
             }
 
             curr_row += dir_row;
