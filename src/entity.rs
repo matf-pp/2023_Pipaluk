@@ -158,7 +158,7 @@ pub trait Sight: Entity {
                 let mut c: usize = 0;
                 let mut i: usize = 0;
                 for n in neighbours.into_iter(){
-                    if n.0 < map.len() && n.1 < map[0].len()
+                    if n.0 < map.len() && n.1 < map[0].len() && n.0 >=1 && n.1 >=1
                     && map[n.0][n.1] != TileType::Wall && self.sees(n, map){
                         floating_wall = false;
                         s += 1;
