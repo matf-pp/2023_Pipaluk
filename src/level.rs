@@ -157,7 +157,11 @@ pub fn play_level(
                 Event::Quit {..}
                 | Event::KeyDown {keycode: Some(Keycode::Escape), ..} => { return GameResult::Quit; },
                 Event::MouseButtonDown { mouse_btn: MouseButton::Left, ..} => {
-                    play_turn(canvas, &mut sprites, &mut state);
+                    let turn_res = play_turn(canvas, &mut sprites, &mut state);
+                    match turn_res {
+                        TurnResult::Caught => {return GameResult::_Defeat},
+                        _ => {}
+                    }
                 },
                 Event::Window { win_event: WindowEvent::Resized(_w, _h), ..} => {
                     match DEBUG {
@@ -176,13 +180,20 @@ pub fn play_level(
     // return GameResult::Victory;
 } 
 
-fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, state: &mut State) {
-    
+#[derive(PartialEq)]
+pub enum TurnResult {
+    Caught,
+    OK
+}
+
+fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, state: &mut State) -> TurnResult {
+    let mut turn_res = TurnResult::OK;
+
     // player turn
     let mut points = vec![state.player.pos];
     points.append(&mut state.trail);
     if points.len() == 1 {
-        return;
+        return turn_res;
     }
     state.animation = Some(Animation::init(
         points.iter().map(|(row, col)| state.tilemap.get_tile_pos(*row, *col)).collect(), 
@@ -218,6 +229,8 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
             render(canvas, sprites, state);
             std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
         }
+        
+        if state.policemen[i].get_position() == state.player.pos {turn_res = TurnResult::Caught;}
     }
     
     // commandos turn
@@ -229,7 +242,11 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
             render(canvas, sprites, state);
             std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
         }
+        
+        if state.commandos[i].get_position() == state.player.pos {turn_res = TurnResult::Caught;}
     }
+    
+    turn_res
 }
 
 struct Drawable {
