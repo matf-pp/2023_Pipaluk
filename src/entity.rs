@@ -126,11 +126,6 @@ pub trait Sight: Entity {
         let mut curr_row = self_row as f32;
         let mut curr_col = self_col as f32;
 
-        println!("CAT: {} {}", self_row,self_col);
-        println!("TARGET: {} {}", other_row, other_col);
-        println!("DIR = {} {}", dir_row, dir_col);
-
-
         while (dir_col >= 0.0 && curr_col.round() as usize <= other_col || 
                dir_col <= 0.0 && curr_col.round() as usize >= other_col) &&
               (dir_row >= 0.0 && curr_row.round() as usize <= other_row || 
@@ -138,19 +133,44 @@ pub trait Sight: Entity {
 
             if map[curr_row.round() as usize][curr_col.round() as usize] == TileType::Wall{
 
-                if map[other_row][other_col] != TileType::Wall{ println!("nije zid");return false;}
-                if (curr_row.round() as usize, curr_col.round() as usize) == target{println!("Cilj");return true;}
+                if map[other_row][other_col] != TileType::Wall{return false;}
+                if (curr_row.round() as usize, curr_col.round() as usize) == target{return true;}
 
                //checks for angles smaller that 45deg
                 let row_check: bool = ((curr_row.round() - 1.0) as usize, curr_col.round() as usize) == target
-                || ((curr_row.round() + 1.0) as usize, curr_col.round() as usize) == target && dir_row.abs() >= 0.7;
+                || ((curr_row.round() + 1.0) as usize, curr_col.round() as usize) == target;
 
                 let col_check: bool = (curr_row.round() as usize, (curr_col.round() - 1.0) as usize) == target
-                || (curr_row.round() as usize, (curr_col.round() + 1.0) as usize) == target && dir_col.abs() >= 0.7;
+                || (curr_row.round() as usize, (curr_col.round() + 1.0) as usize) == target;
                 
-                let angle_check = row_check && !col_check || col_check && !row_check;
+                let angle_check = (row_check && !col_check) || (col_check && !row_check);
 
-                return angle_check;
+                let mut floating_wall: bool = true;
+                let neighbours = vec![
+                    (other_row - 1, other_col - 1),(other_row - 1, other_col), 
+                    (other_row - 1, other_col), (other_row, other_col - 1), 
+                    (other_row, other_col + 1), (other_row + 1, other_col - 1),
+                    (other_row + 1, other_col), (other_row + 1, other_col + 1)];
+                
+                //number of visible tiles that are not Wall
+                let mut s: usize = 0;
+                //number of visible corner iles
+                let mut c: usize = 0;
+                let mut i: usize = 0;
+                for n in neighbours.into_iter(){
+                    if n.0 < map.len() && n.1 < map[0].len()
+                    && map[n.0][n.1] != TileType::Wall && self.sees(n, map){
+                        floating_wall = false;
+                        s += 1;
+                        if i == 1 || i == 3 || i == 4 || i == 6{c += 1;}
+                    }
+                    i += 1;
+                }
+              
+                floating_wall |= s<=1;
+                if s == c {floating_wall = true;}
+                            
+                return (angle_check && !floating_wall) || !floating_wall;
             
             }
 
