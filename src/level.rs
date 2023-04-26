@@ -273,36 +273,48 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
     for row in 0..state.tilemap.tiles.len() {
         for col in 0..state.tilemap.tiles[row].len() {
             let (x, y) = state.tilemap.get_tile_pos(row, col);
+            let (prow, pcol) = state.player.get_position();
+            let (drow, dcol) = ((row as i32 - prow as i32).clamp(-1, 1), (col as i32 - pcol as i32).clamp(-1, 1));
             match state.tilemap.tiles[row][col] {
                 TileType::Floor => { drawables.push(Drawable::init("floor".to_string(), x, y, false, (row, col))); },
                 TileType::Wall => {
                     match state.tilemap.tiles[row-1][col-1] {
                         TileType::Wall | TileType::None => {},
                         _ => {
-                            drawables.push(Drawable::init("border_corner".to_string(), x+12, y+1, false, (row, col)));
+                            if drow == 1 && dcol == 1 {
+                                if state.tilemap.tiles[row-1][col] == TileType::Wall && state.tilemap.tiles[row][col-1] == TileType::Wall {
+                                    drawables.push(Drawable::init("border_corner".to_string(), x+12, y+1, false, (row, col)));
+                                }
+                            }
                         }
                     }
                     match state.tilemap.tiles[row-1][col] {
                         TileType::Wall | TileType::None => {},
                         _ => {
-                            drawables.push(Drawable::init("border_left".to_string(), x+12, y+1, false, (row, col)));
+                            if drow == 1 {
+                                drawables.push(Drawable::init("border_left".to_string(), x+12, y+1, false, (row, col)));
+                            }
                         }
                     }
                     match state.tilemap.tiles[row][col-1] {
                         TileType::Wall | TileType::None => {},
                         _ => {
-                            drawables.push(Drawable::init("border_right".to_string(), x, y+1, false, (row, col)));
+                            if dcol == 1 {
+                                drawables.push(Drawable::init("border_right".to_string(), x, y+1, false, (row, col)));
+                            }
                         }
                     }
                     match state.tilemap.tiles[row+1][col] {
                         TileType::Wall | TileType::None => {},
                         _ => {
-                            match state.tilemap.tiles[row][col-1] {
-                                TileType::Wall | TileType::None => {
-                                    drawables.push(Drawable::init("wall_right".to_string(), x, y-9, false, (row, col)));
-                                },
-                                _ => {
-                                    drawables.push(Drawable::init("wall_right_transparent".to_string(), x, y-9, false, (row, col)));
+                            if drow == -1 {
+                                match state.tilemap.tiles[row][col-1] {
+                                    TileType::Wall | TileType::None => {
+                                        drawables.push(Drawable::init("wall_right".to_string(), x, y-9, false, (row, col)));
+                                    },
+                                    _ => {
+                                        drawables.push(Drawable::init("wall_right_transparent".to_string(), x, y-9, false, (row, col)));
+                                    }
                                 }
                             }
                         }
@@ -310,12 +322,14 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
                     match state.tilemap.tiles[row][col+1] {
                         TileType::Wall | TileType::None => {},
                         _ => {
-                            match state.tilemap.tiles[row-1][col] {
-                                TileType::Wall | TileType::None => {
-                                    drawables.push(Drawable::init("wall_left".to_string(), x+12, y-9, false, (row, col)));
-                                },
-                                _ => {
-                                    drawables.push(Drawable::init("wall_left_transparent".to_string(), x+12, y-9, false, (row, col)));
+                            if dcol == -1 {
+                                match state.tilemap.tiles[row-1][col] {
+                                    TileType::Wall | TileType::None => {
+                                        drawables.push(Drawable::init("wall_left".to_string(), x+12, y-9, false, (row, col)));
+                                    },
+                                    _ => {
+                                        drawables.push(Drawable::init("wall_left_transparent".to_string(), x+12, y-9, false, (row, col)));
+                                    }
                                 }
                             }
                         }
