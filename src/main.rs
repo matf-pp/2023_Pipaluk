@@ -55,8 +55,13 @@ fn main() -> Result<(), String> {
         let menu_result = MenuAction::NewGame;
         if menu_result == MenuAction::NewGame {
             let game_result = level::play_level(&mut canvas, &mut texture_creator, &mut event_pump, &mut music_mixer, "final_sewer");
-            if game_result == GameResult::Quit {
+            /*if game_result == GameResult::Quit {
                 break 'running;
+            }*/
+            
+            match game_result {
+                GameResult::Quit | GameResult::_Defeat => {break 'running;},
+                GameResult::_Victory => todo!()
             }
         }
     }

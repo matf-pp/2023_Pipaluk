@@ -160,7 +160,10 @@ pub fn play_level(
                     let turn_res = play_turn(canvas, &mut sprites, &mut state);
                     match turn_res {
                         TurnResult::Caught => {return GameResult::_Defeat},
-                        _ => {}
+                        TurnResult::OK => {
+                            if state.player.pos == state.goal {return GameResult::_Victory;}
+                            else {}
+                        },
                     }
                 },
                 Event::Window { win_event: WindowEvent::Resized(_w, _h), ..} => {
@@ -176,8 +179,6 @@ pub fn play_level(
         render(canvas, &mut sprites, &mut state);
         std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
     }
-
-    // return GameResult::Victory;
 } 
 
 #[derive(PartialEq)]
@@ -192,21 +193,20 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
     // player turn
     let mut points = vec![state.player.pos];
     points.append(&mut state.trail);
-    if points.len() == 1 {
-        return turn_res;
-    }
-    state.animation = Some(Animation::init(
+    if points.len() != 1 {
+        state.animation = Some(Animation::init(
         points.iter().map(|(row, col)| state.tilemap.get_tile_pos(*row, *col)).collect(), 
         vec!["cat_run_0", "cat_run_1", "cat_run_2", "cat_run_3", "cat_run_4"].iter().map(|name| name.to_string()).collect(),
         3
-    ));
-    while state.animation.is_some() {
-        match DEBUG {
-            false => { state.tilemap.calc_translation(canvas, state.player.get_position()); },
-            true => { state.tilemap.calc_translation_debug(canvas); }
+        ));
+        while state.animation.is_some() {
+            match DEBUG {
+                false => { state.tilemap.calc_translation(canvas, state.player.get_position()); },
+                true => { state.tilemap.calc_translation_debug(canvas); }
+            }
+            render(canvas, sprites, state);
+            std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
         }
-        render(canvas, sprites, state);
-        std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
     }
 
     // citizens turn
