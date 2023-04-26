@@ -18,6 +18,7 @@ impl Player {
 }
 
 impl Entity for Player {
+    const SPEED: usize = 4;
     fn get_position(&self) -> (usize, usize) { self.pos }
     fn set_position(&mut self, tile: (usize, usize)) {
         self.pos = tile;
@@ -27,5 +28,5 @@ impl Entity for Player {
 impl Search for Player {}
 
 impl Sight for Player {
-    const DISTANCE: usize = 7;
+    const VIEW_DISTANCE: usize = 7;
 }

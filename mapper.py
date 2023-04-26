@@ -32,7 +32,7 @@ str_to_num = {
     Tile.LIQUID: 3
 }
 
-CELL = 30
+CELL = 20
 try:
     with open(f'{argv[1]}') as file:
         obj =  json.load(file)
@@ -102,6 +102,10 @@ while running:
             case pg.KEYDOWN if event.key == pg.K_n:
                 normalize_tilemap()
                 pad_tilemap()
+            case pg.KEYDOWN if event.key in [pg.K_PLUS, pg.K_KP_PLUS]:
+                CELL += 2
+            case pg.KEYDOWN if event.key in [pg.K_MINUS, pg.K_KP_MINUS]:
+                CELL -= 2
 
     window.fill(Color('white'))
 

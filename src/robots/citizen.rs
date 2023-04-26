@@ -27,11 +27,11 @@ impl Citizen {
         
         match sees {
             true => {
-                println!("AAAAAA!");
+                println!(" AAAAAA!");
                 self.mode = CitizenState::PANIC;
             },
             false => {
-                println!("Calm...");
+                println!(" Calm...");
                 self.mode = CitizenState::CALM;
                 for _ in 1..8 {
                     let delta: Vec<(isize, isize)> = vec![(1,0), (-1,0), (0,1), (0,-1)];
@@ -51,6 +51,7 @@ impl Citizen {
 }
 
 impl Entity for Citizen {
+    const SPEED: usize = 2;
     fn get_position(&self) -> (usize, usize) { self.pos }
     fn set_position(&mut self, tile: (usize, usize)) {
         self.pos = tile;
@@ -60,7 +61,7 @@ impl Entity for Citizen {
 impl Search for Citizen {}
 
 impl Sight for Citizen {
-    const DISTANCE: usize = 2;
+    const VIEW_DISTANCE: usize = 2;
 }
 
 

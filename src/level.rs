@@ -42,7 +42,7 @@ pub struct State {
     pub commandos: Vec<Commando>,
     pub animation: Option<Animation>,
     pub trail: Vec<(usize, usize)>,
-    pub goal: (usize, usize)
+    pub move_to: (usize, usize)
 }
 
 impl State {
@@ -56,11 +56,11 @@ impl State {
             .collect();
         let policemen: Vec<Policeman> = level.policemen
             .iter()
-            .map(|&p| Policeman::init(p.0, p.1))
+            .map(|&p| Policeman::init(p))
             .collect();
         let commandos: Vec<Commando> = level.commandos
             .iter()
-            .map(|&c| Commando::init(c.0, c.1))
+            .map(|&c| Commando::init(c))
             .collect();
         Self {
             tilemap: tilemap,
@@ -70,7 +70,7 @@ impl State {
             commandos: commandos,
             animation: None,
             trail: vec![],
-            goal: (0, 0)
+            move_to: (0, 0)
         }
     }
 
@@ -108,7 +108,7 @@ pub fn play_level(
     let level = loader::load_level("resources/levels/".to_string() + name + ".json");
     let level_name = level.name.clone();
     let mut state: State = State::init(level);
-    state.goal = state.player.get_position();
+    state.move_to = state.player.get_position();
     state.trail = vec![];
 
     if DEBUG {
@@ -156,9 +156,9 @@ pub fn play_level(
         );
 
         // if new tile selected (and no animation is underway), recalculate path
-        if state.goal != (row, col) && state.animation.is_none() {
-            state.goal = (row, col); 
-            state.trail = state.player.find_shortest_path(state.goal, &state);
+        if state.move_to != (row, col) && state.animation.is_none() {
+            state.move_to = (row, col); 
+            state.trail = state.player.find_shortest_path(state.move_to, &state);
         }
 
         // player move and/or handle events
@@ -179,6 +179,7 @@ pub fn play_level(
                 // shortcuts to win/lose the game instantly in debug mode
                 Event::KeyDown {keycode: Some(Keycode::W), ..} => { if DEBUG { return GameResult::Victory } }, 
                 Event::KeyDown {keycode: Some(Keycode::L), ..} => { if DEBUG { return GameResult::Defeat } },
+                Event::MouseButtonDown {mouse_btn: MouseButton::Right, ..} => { if DEBUG { println!("Clicked {:?}", (row, col)) } },
                 Event::Window { win_event: WindowEvent::Resized(..), ..} => {
                     match DEBUG {
                         false => { state.tilemap.calc_scale_translation(canvas, state.player.get_position()); },
@@ -370,7 +371,7 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
         else {
             ((x, y), sprite, finished, flipped) = state.animation.as_mut().unwrap().next_frame();
             state.player.pos = state.tilemap.get_tile_index(x+14, y+9);
-            state.trail = state.player.find_shortest_path(state.goal, &state);
+            state.trail = state.player.find_shortest_path(state.move_to, &state);
             state.player.flipped = flipped.unwrap_or(state.player.flipped);
             state.player.current_sprite = sprite.to_string();
             if finished {
@@ -438,7 +439,7 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
         }
         else if !DEBUG {
             let distance = state.player.distance_to((row, col));
-            let color = 256.0 * (1.0 - (distance / Player::DISTANCE as f32).powf(2.0)).max(0.0);
+            let color = 256.0 * (1.0 - (distance / Player::VIEW_DISTANCE as f32).powf(2.0)).max(0.0);
             let color = color as u8;
             tex.set_color_mod(color, color, color); 
         }

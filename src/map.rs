@@ -99,7 +99,7 @@ impl Map {
     pub fn calc_scale_translation(&mut self, canvas: &mut WindowCanvas, player_pos: (usize, usize)) -> u32 {
         let canvas_size = canvas.output_size().unwrap();
         let canvas_size = (canvas_size.0 as i32, canvas_size.1 as i32);
-        let visible_size = (Player::DISTANCE as i32 * 28 + 50, Player::DISTANCE as i32 * 19 + 50);
+        let visible_size = (Player::VIEW_DISTANCE as i32 * 28 + 50, Player::VIEW_DISTANCE as i32 * 19 + 50);
 
         self.scale = (canvas_size.0 as f32 / visible_size.0 as f32).min(canvas_size.1 as f32 / visible_size.1 as f32) as u32;
         self.scale = self.scale.max(1);
@@ -172,9 +172,9 @@ impl Map {
         self.topmost -= 6;
         self.rightmost += 28;
         self.bottommost += 19 + 6;
-        println!("topmost={}", self.topmost);
-        println!("bottommost={}", self.bottommost);
-        println!("leftmost={}", self.leftmost);
-        println!("rightmost={}", self.rightmost);
+        // println!("topmost={}", self.topmost);
+        // println!("bottommost={}", self.bottommost);
+        // println!("leftmost={}", self.leftmost);
+        // println!("rightmost={}", self.rightmost);
     }
 }

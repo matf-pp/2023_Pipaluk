@@ -4,6 +4,7 @@ extern crate queues;
 use queues::*;
 
 pub trait Entity {
+    const SPEED: usize;
     fn get_position(&self) -> (usize, usize);
     fn set_position(&mut self, tile: (usize, usize));
     fn distance_to(&self, other: (usize, usize)) -> f32 {
@@ -109,12 +110,12 @@ pub trait Search: Entity {
 }
 
 pub trait Sight: Entity {
-    const DISTANCE: usize;
+    const VIEW_DISTANCE: usize;
     fn sees(&self, target: (usize, usize), map: &Vec<Vec<TileType>>) -> bool {
         let (self_row, self_col) = self.get_position();
         let (other_row, other_col) = target;
 
-        if self.distance_to(target) > Self::DISTANCE as f32 {return false;}
+        if self.distance_to(target) > Self::VIEW_DISTANCE as f32 {return false;}
         if (self_row, self_col) == (other_row, other_col) {return true;}
         
         let mut dir_col: f32 = other_col as f32 - self_col as f32;

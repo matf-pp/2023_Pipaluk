@@ -63,7 +63,6 @@ pub fn show_splash(
         if passed*3/2 >= duration {
             alpha = (255 - 255 * (passed * 3 - duration * 2) / duration) as u8;
         }
-        println!("{}", alpha);
         text_texture.set_alpha_mod(alpha);
 
         canvas.copy(

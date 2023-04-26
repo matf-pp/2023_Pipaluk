@@ -14,14 +14,13 @@ use rand::Rng;
 #[derive(Clone)]
 pub struct Commando {
     pos: (usize, usize),
-    speed: usize,
     chasing: bool,
     chase_pos: Option<(usize, usize)>
 }
 
 impl Commando {
-    pub fn init(pos: (usize, usize), speed: usize) -> Self {
-        Self {pos, speed, chasing: false, chase_pos: None}
+    pub fn init(pos: (usize, usize)) -> Self {
+        Self {pos, chasing: false, chase_pos: None}
     } 
     
     pub fn turn(&mut self, state: &State) -> Vec<(usize, usize)> {
@@ -30,7 +29,7 @@ impl Commando {
 
         // if reached searching pos, reset
         if self.chase_pos.is_some() && self.chase_pos.unwrap() == self.get_position() {
-            println!("[COMMANDO] We lost 'em!");
+            println!(" We lost 'em!");
             self.chasing = false;
             self.chase_pos = None;
         }
@@ -38,13 +37,13 @@ impl Commando {
         // if I see player, chase!
         let sees_player = self.sees(player_pos, &state.tilemap.tiles);
         if sees_player {
-            println!("[COMMANDO] Apprehending suspect!");
+            println!(" Apprehending suspect!");
             let player_pos = state.player.get_position();
             self.chase_pos = Some(player_pos);
             self.chasing = true;
             
             let mut path = self.find_shortest_path(player_pos, state);
-            unsafe { path.set_len(self.speed.min(path.len())) };
+            unsafe { path.set_len(Self::SPEED.min(path.len())) };
             return path;
         }
 
@@ -55,21 +54,21 @@ impl Commando {
             .cloned()
             .collect::<Vec<Citizen>>();
         if panic_citizens.len() != 0 {
-            println!("[COMMANDO] Assisting citizen!");
+            println!(" Assisting citizen!");
             let closest = panic_citizens.iter().min_by_key(|k| k.distance_to(self.get_position()) as i32).unwrap();
             let mut path = self.find_shortest_path(closest.get_position(), state);
-            unsafe { path.set_len(self.speed.min(path.len())) };
+            unsafe { path.set_len(Self::SPEED.min(path.len())) };
             return path;
         }
 
         if self.chasing {
             // going to place where player last seen
-            println!("[COMMANDO] Searching for suspect.");
+            println!(" Searching for suspect.");
             println!("{:?}", self.chase_pos);
             match self.chase_pos {
                 Some(chase_pos) => {
                     let mut path = self.find_shortest_path(chase_pos, state);
-                    unsafe { path.set_len(self.speed.min(path.len())) };
+                    unsafe { path.set_len(Self::SPEED.min(path.len())) };
                     return path;
                 },
                 None => {}
@@ -77,7 +76,7 @@ impl Commando {
         }
         
         // otherwise wander aimlessly...
-        println!("[COMMANDO] Patrolling.");
+        println!(" Patrolling.");
         for _ in 1..8 {
             let delta: Vec<(isize, isize)> = vec![(1,0), (-1,0), (0,1), (0,-1)];
             let i = rand::thread_rng().gen_range(0..=3);
@@ -94,6 +93,7 @@ impl Commando {
 }
 
 impl Entity for Commando {
+    const SPEED: usize = 4;
     fn get_position(&self) -> (usize, usize) { self.pos }
     fn set_position(&mut self, tile: (usize, usize)) {
         self.pos = tile;
@@ -189,6 +189,6 @@ impl Search for Commando {
 }
 
 impl Sight for Commando {
-    const DISTANCE: usize = 5;
+    const VIEW_DISTANCE: usize = 5;
 }
 

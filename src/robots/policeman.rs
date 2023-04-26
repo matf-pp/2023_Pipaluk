@@ -13,13 +13,12 @@ use rand::Rng;
 
 #[derive(Clone)]
 pub struct Policeman {
-    pos: (usize, usize),
-    speed: usize,
+    pos: (usize, usize)
 }
 
 impl Policeman {
-    pub fn init(pos: (usize, usize), speed: usize) -> Self {
-        Self {pos, speed}
+    pub fn init(pos: (usize, usize)) -> Self {
+        Self {pos}
     } 
     
     pub fn turn(&mut self, state: &State) -> Vec<(usize, usize)> {
@@ -29,10 +28,10 @@ impl Policeman {
         // if I see player, chase!
         let sees_player = self.sees(player_pos, &state.tilemap.tiles);
         if sees_player {
-            println!("Apprehending suspect!");
+            println!(" Apprehending suspect!");
             let player_pos = state.player.get_position();
             let mut path = self.find_shortest_path(player_pos, state);
-            unsafe { path.set_len(self.speed.min(path.len())) };
+            unsafe { path.set_len(Self::SPEED.min(path.len())) };
             return path;
         }
 
@@ -43,14 +42,15 @@ impl Policeman {
             .cloned()
             .collect::<Vec<Citizen>>();
         if panic_citizens.len() != 0 {
+            println!(" Assisting citizen!");
             let closest = panic_citizens.iter().min_by_key(|k| k.distance_to(self.get_position()) as i32).unwrap();
             let mut path = self.find_shortest_path(closest.get_position(), state);
-            unsafe { path.set_len(self.speed.min(path.len())) };
+            unsafe { path.set_len(Self::SPEED.min(path.len())) };
             return path;
         }
 
         // otherwise wander aimlessly...
-        println!("Patrolling.");
+        println!(" Patrolling.");
         for _ in 1..8 {
             let delta: Vec<(isize, isize)> = vec![(1,0), (-1,0), (0,1), (0,-1)];
             let i = rand::thread_rng().gen_range(0..=3);
@@ -67,6 +67,7 @@ impl Policeman {
 }
 
 impl Entity for Policeman {
+    const SPEED: usize = 3;
     fn get_position(&self) -> (usize, usize) { self.pos }
     fn set_position(&mut self, tile: (usize, usize)) {
         self.pos = tile;
@@ -163,5 +164,5 @@ impl Search for Policeman {
 }
 
 impl Sight for Policeman {
-    const DISTANCE: usize = 3;
+    const VIEW_DISTANCE: usize = 3;
 }
