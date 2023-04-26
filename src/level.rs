@@ -2,6 +2,7 @@ use sdl2::EventPump;
 use sdl2::pixels::Color;
 use sdl2::render::{ WindowCanvas, TextureCreator, Texture};
 use sdl2::image::LoadTexture;
+use sdl2::ttf::Font;
 use sdl2::video::WindowContext;
 use sdl2::rect::Rect;
 use sdl2::event::{Event, WindowEvent};
@@ -10,6 +11,7 @@ use sdl2::mouse::{Cursor, SystemCursor, MouseButton};
 use std::collections::HashMap;
 
 use crate::mixer::Mixer;
+use crate::splash::{show_splash, SplashResult};
 use crate::{loader, DEBUG};
 use crate::animation::Animation;
 use crate::map::{Map, TileType};
@@ -26,8 +28,9 @@ const FRAME_DURATION: u64 = 50;
 #[derive(PartialEq)]
 pub enum GameResult {
     Quit,
-    _Victory,
-    _Defeat
+    Menu,
+    Victory,
+    Defeat
 }
 
 #[derive(Clone)]
@@ -86,9 +89,16 @@ pub fn play_level(
     canvas: &mut WindowCanvas, 
     texture_creator: &TextureCreator<WindowContext>,
     event_pump: &mut EventPump,
+    font: &mut Font,
     music_mixer: &mut Mixer,
     name: &str
 ) -> GameResult {
+
+    match show_splash(canvas, &texture_creator, event_pump, font, "Sewers".to_string(), 0.75, 3000) {
+        SplashResult::Ok => {},
+        SplashResult::Quit => { return GameResult::Quit; }
+    }
+
     let cursor = Cursor::from_system(SystemCursor::Crosshair).unwrap();
     cursor.set();
 
@@ -154,19 +164,22 @@ pub fn play_level(
         // player move and/or handle events
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit {..}
-                | Event::KeyDown {keycode: Some(Keycode::Escape), ..} => { return GameResult::Quit; },
+                Event::Quit {..} => { return GameResult::Quit; },
+                Event::KeyDown {keycode: Some(Keycode::Escape), ..} => { return GameResult::Menu; },
                 Event::MouseButtonDown { mouse_btn: MouseButton::Left, ..} => {
                     let turn_res = play_turn(canvas, &mut sprites, &mut state);
                     match turn_res {
-                        TurnResult::Caught => {return GameResult::_Defeat},
+                        TurnResult::Caught => { return GameResult::Defeat },
                         TurnResult::OK => {
-                            if state.player.pos == state.goal {return GameResult::_Victory;}
-                            else {}
+                            // if state.player.pos == state.goal {return GameResult::_Victory;}
+                            // else {}
                         },
                     }
                 },
-                Event::Window { win_event: WindowEvent::Resized(_w, _h), ..} => {
+                // shortcuts to win/lose the game instantly in debug mode
+                Event::KeyDown {keycode: Some(Keycode::W), ..} => { if DEBUG { return GameResult::Victory } }, 
+                Event::KeyDown {keycode: Some(Keycode::L), ..} => { if DEBUG { return GameResult::Defeat } },
+                Event::Window { win_event: WindowEvent::Resized(..), ..} => {
                     match DEBUG {
                         false => { state.tilemap.calc_scale_translation(canvas, state.player.get_position()); },
                         true => { state.tilemap.calc_scale_translation_debug(canvas); }

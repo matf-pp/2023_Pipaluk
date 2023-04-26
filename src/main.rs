@@ -9,11 +9,12 @@ mod player;
 mod robots;
 mod loader;
 mod animation;
+mod splash;
 
 use level::GameResult;
 use menu::MenuAction;
 
-const DEBUG: bool = false;
+const DEBUG: bool = true;
 
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
@@ -45,6 +46,8 @@ fn main() -> Result<(), String> {
 
     let mut music_mixer = mixer::Mixer::init();
 
+    splash::show_splash(&mut canvas, &texture_creator, &mut event_pump, &mut font, "PIPALUK".to_string(), 0.75, 1500);
+
     canvas.present();
     'running: loop {
         
@@ -54,14 +57,20 @@ fn main() -> Result<(), String> {
         }
         let menu_result = MenuAction::NewGame;
         if menu_result == MenuAction::NewGame {
-            let game_result = level::play_level(&mut canvas, &mut texture_creator, &mut event_pump, &mut music_mixer, "final_sewer");
-            /*if game_result == GameResult::Quit {
-                break 'running;
-            }*/
-            
+            let game_result = level::play_level(&mut canvas, &mut texture_creator, &mut event_pump, &mut font, &mut music_mixer, "final_sewer");
             match game_result {
-                GameResult::Quit | GameResult::_Defeat => {break 'running;},
-                GameResult::_Victory => todo!()
+                GameResult::Quit => {
+                    break 'running;
+                },
+                GameResult::Menu => {
+
+                },
+                GameResult::Defeat => {
+                    splash::show_splash(&mut canvas, &texture_creator, &mut event_pump, &mut font, "You Died".to_string(), 0.75, 4500);
+                },
+                GameResult::Victory => {
+
+                }
             }
         }
     }
