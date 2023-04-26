@@ -5,6 +5,7 @@ pub struct LevelFile {
     pub name: String,
     pub tilemap: Vec<Vec<u32>>,
     pub player: (usize, usize),
+    pub exit: (usize, usize),
     pub citizens: Vec<(usize, usize)>,
     pub policemen: Vec<(usize, usize)>,
     pub commandos: Vec<(usize, usize)>

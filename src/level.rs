@@ -37,6 +37,7 @@ pub enum GameResult {
 pub struct State {
     pub tilemap: Map,
     pub player: Player,
+    pub exit: (usize, usize),
     pub citizens: Vec<Citizen>,
     pub policemen: Vec<Policeman>,
     pub commandos: Vec<Commando>,
@@ -65,6 +66,7 @@ impl State {
         Self {
             tilemap: tilemap,
             player: player,
+            exit: level.exit,
             citizens: citizens,
             policemen: policemen,
             commandos: commandos,
@@ -131,7 +133,7 @@ pub fn play_level(
     }
     let level_textures = vec![
         "floor", "liquid", "wall_left", "wall_right", "wall_left_transparent", "wall_right_transparent",
-        "border_left", "border_right", "border_corner"
+        "border_left", "border_right", "border_corner", "exit"
     ];
     for name in level_textures.iter() { 
         sprites.insert(
@@ -164,15 +166,15 @@ pub fn play_level(
         // player move and/or handle events
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit {..} => { return GameResult::Quit; },
-                Event::KeyDown {keycode: Some(Keycode::Escape), ..} => { return GameResult::Menu; },
+                Event::Quit {..} => { return GameResult::Quit },
+                Event::KeyDown {keycode: Some(Keycode::Escape), ..} => { return GameResult::Menu },
                 Event::MouseButtonDown { mouse_btn: MouseButton::Left, ..} => {
-                    let turn_res = play_turn(canvas, &mut sprites, &mut state);
-                    match turn_res {
-                        TurnResult::Caught => { return GameResult::Defeat },
+                    match play_turn(canvas, &mut sprites, &mut state) {
+                        TurnResult::Caught => { 
+                            return GameResult::Defeat 
+                        },
                         TurnResult::OK => {
-                            // if state.player.pos == state.goal {return GameResult::_Victory;}
-                            // else {}
+                            if state.player.pos == state.exit { return GameResult::Victory }
                         },
                     }
                 },
@@ -221,6 +223,9 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
             render(canvas, sprites, state);
             std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
         }
+    }
+    if state.player.get_position() == state.exit {
+        return TurnResult::OK;
     }
 
     // citizens turn
@@ -359,6 +364,12 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
     for (row, col) in state.trail.iter() {
         let (x, y) = state.tilemap.get_tile_pos(*row, *col);
         drawables.push(Drawable::init("highlight".to_string(), x, y, false, (*row, *col)));
+    }
+
+    // add entrance and exit
+    {
+        let (x, y) = state.tilemap.get_tile_pos(state.exit.0, state.exit.1);
+        drawables.push(Drawable::init("exit".to_string(), x, y, false, (state.exit.0, state.exit.1)));
     }
 
     // add cat
