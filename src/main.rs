@@ -46,34 +46,60 @@ fn main() -> Result<(), String> {
 
     let mut music_mixer = mixer::Mixer::init();
 
+    let levels = ["final_sewer", "final_sewer"];
+
     splash::show_splash(&mut canvas, &texture_creator, &mut event_pump, &mut font, "PIPALUK".to_string(), 0.75, 1500);
 
     canvas.present();
-    'running: loop {
-        
-        let menu_result = menu::show_menu(&mut canvas, &mut texture_creator, &mut event_pump, &mut font, &mut music_mixer);
+    let mut menu_result = menu::show_menu(&mut canvas, &mut texture_creator, &mut event_pump, &mut font, &mut music_mixer);
         if menu_result == MenuAction::Quit {
-            break 'running;
+            return Ok(());
         }
-        let menu_result = MenuAction::NewGame;
+    'running: loop {
+        menu_result = MenuAction::NewGame;
         if menu_result == MenuAction::NewGame {
-            let game_result = level::play_level(&mut canvas, &mut texture_creator, &mut event_pump, &mut font, &mut music_mixer, "final_sewer");
-            match game_result {
-                GameResult::Quit => {
-                    break 'running;
-                },
-                GameResult::Menu => {
-
-                },
-                GameResult::Defeat => {
-                    splash::show_splash(&mut canvas, &texture_creator, &mut event_pump, &mut font, "You Died".to_string(), 0.75, 4500);
-                },
-                GameResult::Victory => {
-
+            let mut i: usize = 0;
+            let n: usize = levels.len();
+            while i < n{
+                let game_result = level::play_level(&mut canvas, &mut texture_creator, &mut event_pump, &mut font, &mut music_mixer, levels[i]);
+                match game_result {
+                    GameResult::Quit => {
+                        break 'running;
+                    },
+                    GameResult::Menu => {
+                        menu_result = menu::show_menu(&mut canvas, &mut texture_creator, &mut event_pump, &mut font, &mut music_mixer);
+                        match menu_result{
+                            MenuAction::Quit => { break 'running },
+                            MenuAction::NewGame => {},
+                            MenuAction::Continue => {},
+                            MenuAction::_Credits => {},
+                            MenuAction::_Options => {}
+                        }     
+                    },
+                    GameResult::Defeat => {
+                        splash::show_splash(&mut canvas, &texture_creator, &mut event_pump, &mut font, "You Died".to_string(), 0.75, 4500);
+                    },
+                    GameResult::Victory => {
+                        i += 1;
+                        if i == n{
+                            splash::show_splash(&mut canvas, &texture_creator, &mut event_pump, &mut font, "Congratulations you won!".to_string(), 0.75, 4500);
+                            menu_result = menu::show_menu(&mut canvas, &mut texture_creator, &mut event_pump, &mut font, &mut music_mixer);
+                            match menu_result{
+                                MenuAction::Quit => { break 'running },
+                                MenuAction::NewGame => {},
+                                MenuAction::Continue => {},
+                                MenuAction::_Credits => {},
+                                MenuAction::_Options => {}
+                            }
+                        }
+                        else {
+                            splash::show_splash(&mut canvas, &texture_creator, &mut event_pump, &mut font, "You escaped!".to_string(), 0.75, 2500);
+                        }
+                    }
                 }
             }
+            break 'running; 
         }
     }
-
     Ok(())
 }
