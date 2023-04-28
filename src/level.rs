@@ -96,11 +96,6 @@ pub fn play_level(
     name: &str
 ) -> GameResult {
 
-    match show_splash(canvas, &texture_creator, event_pump, font, "Sewers".to_string(), 0.75, 3000) {
-        SplashResult::Ok => {},
-        SplashResult::Quit => { return GameResult::Quit; }
-    }
-
     let cursor = Cursor::from_system(SystemCursor::Crosshair).unwrap();
     cursor.set();
 
@@ -112,6 +107,11 @@ pub fn play_level(
     let mut state: State = State::init(level);
     state.move_to = state.player.get_position();
     state.trail = vec![];
+
+    match show_splash(canvas, &texture_creator, event_pump, font, level_name.to_string().to_uppercase(), 0.75, 3000) {
+        SplashResult::Ok => {},
+        SplashResult::Quit => { return GameResult::Quit; }
+    }
 
     if DEBUG {
         state.tilemap.print();
@@ -365,11 +365,11 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
         let (x, y) = state.tilemap.get_tile_pos(*row, *col);
         drawables.push(Drawable::init("highlight".to_string(), x, y, false, (*row, *col)));
     }
-
-    // add entrance and exit
+ 
+    // add exit
     {
         let (x, y) = state.tilemap.get_tile_pos(state.exit.0, state.exit.1);
-        drawables.push(Drawable::init("exit".to_string(), x, y, false, (state.exit.0, state.exit.1)));
+        drawables.push(Drawable::init("exit".to_string(), x, y-16, false, (state.exit.0, state.exit.1)));
     }
 
     // add cat
