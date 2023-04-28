@@ -46,7 +46,7 @@ fn main() -> Result<(), String> {
 
     let mut music_mixer = mixer::Mixer::init();
 
-    let levels = ["final_sewer", "final_sewer"];
+    let levels = ["labrynth","final_sewer", "final_sewer"];
 
     splash::show_splash(&mut canvas, &texture_creator, &mut event_pump, &mut font, "PIPALUK".to_string(), 0.75, 1500);
 
@@ -70,7 +70,7 @@ fn main() -> Result<(), String> {
                         menu_result = menu::show_menu(&mut canvas, &mut texture_creator, &mut event_pump, &mut font, &mut music_mixer);
                         match menu_result{
                             MenuAction::Quit => { break 'running },
-                            MenuAction::NewGame => {},
+                            MenuAction::NewGame => {continue 'running;},
                             MenuAction::Continue => {},
                             MenuAction::_Credits => {},
                             MenuAction::_Options => {}
@@ -86,7 +86,7 @@ fn main() -> Result<(), String> {
                             menu_result = menu::show_menu(&mut canvas, &mut texture_creator, &mut event_pump, &mut font, &mut music_mixer);
                             match menu_result{
                                 MenuAction::Quit => { break 'running },
-                                MenuAction::NewGame => {},
+                                MenuAction::NewGame => {continue 'running;},
                                 MenuAction::Continue => {},
                                 MenuAction::_Credits => {},
                                 MenuAction::_Options => {}
