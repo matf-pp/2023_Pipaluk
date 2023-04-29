@@ -14,7 +14,7 @@ mod splash;
 use level::GameResult;
 use menu::MenuAction;
 
-const DEBUG: bool = true;
+const DEBUG: bool = false;
 
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
