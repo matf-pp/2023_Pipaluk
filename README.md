@@ -15,6 +15,31 @@ Thread carefully along the streets of this strange city and delve deep into the 
   <img src="screenshots/map_labyrinth.png" width="49%" />
 </p>
 
+## Run Pipaluk 
+
+### Linux (Ubuntu)
+
+You will need SDL2:
+```
+sudo apt-get install libsdl2-dev libsdl2-mixer-dev libsdl2-image-dev libsdl2-ttf-dev
+```
+
+Download the latest `pipaluk_linux.zip` from releases, and run the `pipaluk` executable:
+```
+./pipaluk
+```
+
+If you lack permissions to execute, run:
+```
+sudo chmod u+x pipaluk
+```
+
+### Windows
+
+Download the latest `pipaluk_windows.zip` from releases and extract it.
+
+Run `pipaluk.exe`
+
 ## Build Pipaluk
 
 In order to build the project, you will need to [install Rust and Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) (both Linux and Windows).
@@ -22,25 +47,37 @@ In order to build the project, you will need to [install Rust and Cargo](https:/
 ### Linux (Ubuntu)
 
 You will need SDL2:
-```bash
+```
 sudo apt-get install libsdl2-dev libsdl2-mixer-dev libsdl2-image-dev libsdl2-ttf-dev
 ```
 
 Clone the project and navigate to it via terminal:
-```bash
+```
 git clone https://github.com/matf-pp/2023_Pipaluk.git
 cd 2023_Pipaluk
 ```
 
 The following command will install any required libraries, build, and finally run the game:
-```bash
+```
 cargo run
 ```
+
+### Windows
+
+Download VC versions of [SDL2](https://github.com/libsdl-org/SDL/releases/), [SDL2-image](https://github.com/libsdl-org/SDL_image/releases/), [SDL2-ttf](https://github.com/libsdl-org/SDL_ttf/releases/), and [SDL2-mixer](https://github.com/libsdl-org/SDL_mixer/releases/).
+
+Put the `.lib` files inside the project folder; build and run using cargo:
+```
+cargo run
+```
+
 
 ## Credits
 
 The game was developed with love by Marijana Čupović ([Marijameme](https://github.com/Marijameme)), Vuk Amidžić ([vukamidzic](https://github.com/vukamidzic)), and Daniil Grbić ([daniilgrbic](https://github.com/daniilgrbic)).
 
 Big thanks to Lara Ritan for the awesome soundtrack.
+
+Maps by Marijana Čupović.
 
 Art by Daniil Grbić.
