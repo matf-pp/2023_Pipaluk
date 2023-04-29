@@ -114,8 +114,8 @@ impl Map {
         let canvas_size = canvas.output_size().unwrap();
         let canvas_size = (canvas_size.0 as i32, canvas_size.1 as i32);
 
-        self.desired_translation_x = (- player_pos.0) * self.scale as i32 + canvas_size.0 / 2;
-        self.desired_translation_y = (- player_pos.1) * self.scale as i32 + canvas_size.1 / 2;
+        self.desired_translation_x = (- player_pos.0) * self.scale as i32 + canvas_size.0 / 2 - 8 * self.scale as i32;
+        self.desired_translation_y = (- player_pos.1) * self.scale as i32 + canvas_size.1 / 2 - 8 * self.scale as i32;
         
         (self.desired_translation_x, self.desired_translation_y)
     }
