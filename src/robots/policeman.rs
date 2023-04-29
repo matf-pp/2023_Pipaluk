@@ -67,7 +67,7 @@ impl Policeman {
 }
 
 impl Entity for Policeman {
-    const SPEED: usize = 3;
+    const SPEED: usize = 2;
     fn get_position(&self) -> (usize, usize) { self.pos }
     fn set_position(&mut self, tile: (usize, usize)) {
         self.pos = tile;
