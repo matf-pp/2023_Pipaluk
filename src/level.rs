@@ -161,6 +161,10 @@ pub fn play_level(
         if state.move_to != (row, col) && state.animation.is_none() {
             state.move_to = (row, col); 
             state.trail = state.player.find_shortest_path(state.move_to, &state);
+            
+            if state.trail.len() > 5 {
+                state.trail = (&state.trail[0..5]).to_vec();
+            }
         }
 
         // player move and/or handle events

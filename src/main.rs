@@ -14,7 +14,7 @@ mod splash;
 use level::GameResult;
 use menu::MenuAction;
 
-const DEBUG: bool = false;
+const DEBUG: bool = true;
 
 fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
@@ -46,7 +46,7 @@ fn main() -> Result<(), String> {
 
     let mut music_mixer = mixer::Mixer::init();
 
-    let levels = ["streets","sewers", "labyrinth"];
+    let levels = ["streets", "sewers", "labyrinth"];
 
     splash::show_splash(&mut canvas, &texture_creator, &mut event_pump, &mut font, "PIPALUK".to_string(), 0.75, 1500);
 
