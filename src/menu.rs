@@ -16,10 +16,7 @@ use crate::mixer::Mixer;
 #[derive(PartialEq, Clone, Copy)]
 pub enum MenuAction {
     Quit,
-    NewGame,
-    Continue,
-    _Credits,
-    _Options
+    NewGame
 }
 
 struct MenuButton {
@@ -146,16 +143,10 @@ pub fn show_menu(
             Rect::new(0, 20, 340, 60)
         ),
         MenuButton::new(
-            "Continue".to_string(), 
-            MenuAction::Continue, 
-            false,
-            Rect::new(0, 100, 280, 60)
-        ),
-        MenuButton::new(
             "Quit".to_string(), 
             MenuAction::Quit, 
             true,
-            Rect::new(0, 180, 220, 60)
+            Rect::new(0, 100, 260, 60)
         )
     ];
 
@@ -175,7 +166,7 @@ pub fn show_menu(
                 Event::Quit {..}
                 | Event::KeyDown { keycode: Some(Keycode::Escape), ..} => { return MenuAction::Quit },
                 Event::MouseButtonDown { x, y, .. } => {
-                    for i in 0..3 {
+                    for i in 0..buttons.len() {
                         if buttons[i].enabled && buttons[i].rect(scale).contains_point(Point::new(x, y)) {
                             println!("\"{}\" pressed", buttons[i].text);
                             return buttons[i].action;
@@ -187,7 +178,7 @@ pub fn show_menu(
         }
 
         let (x, y) = (event_pump.mouse_state().x(), event_pump.mouse_state().y());
-        for i in 0..3 {
+        for i in 0..buttons.len() {
             if buttons[i].rect(scale).contains_point(Point::new(x, y)) {
                 buttons[i].hovered = (buttons[i].hovered + 5).min(50);
             }
@@ -235,7 +226,7 @@ pub fn show_menu(
             )
         ).unwrap();
 
-        for i in 0..3 {
+        for i in 0..buttons.len() {
             buttons[i].render(canvas, texture_creator, font, scale);
         }
 

@@ -70,10 +70,7 @@ fn main() -> Result<(), String> {
                         menu_result = menu::show_menu(&mut canvas, &mut texture_creator, &mut event_pump, &mut font, &mut music_mixer);
                         match menu_result{
                             MenuAction::Quit => { break 'running },
-                            MenuAction::NewGame => {continue 'running;},
-                            MenuAction::Continue => {},
-                            MenuAction::_Credits => {},
-                            MenuAction::_Options => {}
+                            MenuAction::NewGame => {continue 'running;}
                         }     
                     },
                     GameResult::Defeat => {
@@ -88,10 +85,7 @@ fn main() -> Result<(), String> {
                             menu_result = menu::show_menu(&mut canvas, &mut texture_creator, &mut event_pump, &mut font, &mut music_mixer);
                             match menu_result{
                                 MenuAction::Quit => { break 'running },
-                                MenuAction::NewGame => {continue 'running;},
-                                MenuAction::Continue => {},
-                                MenuAction::_Credits => {},
-                                MenuAction::_Options => {}
+                                MenuAction::NewGame => {continue 'running;}
                             }
                         }
                         else {
