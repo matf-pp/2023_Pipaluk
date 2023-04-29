@@ -264,7 +264,7 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
         }
         
         if state.policemen[i].get_position() == state.player.pos { return TurnResult::Caught }
-        seen = seen || state.citizens[i].sees(state.player.get_position(), &state.tilemap.tiles);
+        seen = seen || state.policemen[i].sees(state.player.get_position(), &state.tilemap.tiles);
     }
     
     // commandos turn
@@ -279,7 +279,7 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
         }
         
         if state.commandos[i].get_position() == state.player.pos { return TurnResult::Caught }
-        seen = seen || state.citizens[i].sees(state.player.get_position(), &state.tilemap.tiles);
+        seen = seen || state.commandos[i].sees(state.player.get_position(), &state.tilemap.tiles);
     }
     
     if seen { 
@@ -404,7 +404,6 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
         else {
             ((x, y), sprite, finished, flipped) = state.animation.as_mut().unwrap().next_frame();
             state.player.pos = state.tilemap.get_tile_index(x+14, y+9);
-            state.trail = state.player.find_shortest_path(state.move_to, &state);
             state.player.flipped = flipped.unwrap_or(state.player.flipped);
             state.player.current_sprite = sprite.to_string();
             if finished {

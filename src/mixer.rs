@@ -63,13 +63,15 @@ impl Mixer {
         if self.music_channels.get(&self.current_music_channel).unwrap().is_playing() {
             println!("Stopping music on channel {}", self.current_music_channel);
             self.music_channels.get(&self.current_music_channel).unwrap().fade_out(3000);
+            self.current_track = None;
         }
     }
 
     pub fn play_effect(&mut self, name: &str) {
-        self.other_channels.get("effects").unwrap().play(
+        self.other_channels.get("effects").unwrap().fade_in(
             self.chunks.get(&name.to_string()).unwrap(), 
-            1
+            0,
+            150
         ).unwrap();
     }
 }
