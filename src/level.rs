@@ -41,6 +41,7 @@ pub struct State {
     pub citizens: Vec<Citizen>,
     pub policemen: Vec<Policeman>,
     pub commandos: Vec<Commando>,
+    pub seen_timer: i32,
     pub animation: Option<Animation>,
     pub trail: Vec<(usize, usize)>,
     pub move_to: (usize, usize)
@@ -70,6 +71,7 @@ impl State {
             citizens: citizens,
             policemen: policemen,
             commandos: commandos,
+            seen_timer: 0,
             animation: None,
             trail: vec![],
             move_to: (0, 0)
@@ -147,6 +149,9 @@ pub fn play_level(
 
     loop {
 
+        if state.seen_timer != 0 { music_mixer.play_song("fast"); }
+        else { music_mixer.play_song("slow"); }
+
         // get mouse position and determine selected tile
         let (mouse_x, mouse_y) = (
             event_pump.mouse_state().x(), 
@@ -177,6 +182,9 @@ pub fn play_level(
                         TurnResult::Caught => { 
                             return GameResult::Defeat 
                         },
+                        TurnResult::Detected => {
+                            state.seen_timer = 7500;
+                        },
                         TurnResult::OK => {
                             if state.player.pos == state.exit { return GameResult::Victory }
                         },
@@ -197,18 +205,18 @@ pub fn play_level(
         }
 
         render(canvas, &mut sprites, &mut state);
-        std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
     }
 } 
 
 #[derive(PartialEq)]
 pub enum TurnResult {
     Caught,
+    Detected,
     OK
 }
 
 fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, state: &mut State) -> TurnResult {
-    let mut turn_res = TurnResult::OK;
+    let mut seen = false;
 
     // player turn
     let mut points = vec![state.player.pos];
@@ -225,7 +233,6 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
                 true => { state.tilemap.calc_translation_debug(canvas); }
             }
             render(canvas, sprites, state);
-            std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
         }
     }
     if state.player.get_position() == state.exit {
@@ -240,9 +247,9 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
             state.citizens[i].set_position(*tile);
             if state.player.sees(*tile, &state.tilemap.tiles) {
                 render(canvas, sprites, state);
-                std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
             }
         }
+        seen = seen || state.citizens[i].sees(state.player.get_position(), &state.tilemap.tiles);
     }
     
     // policemen turn
@@ -253,11 +260,11 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
             state.policemen[i].set_position(*tile);
             if state.player.sees(*tile, &state.tilemap.tiles) {
                 render(canvas, sprites, state);
-                std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
             }
         }
         
-        if state.policemen[i].get_position() == state.player.pos {turn_res = TurnResult::Caught;}
+        if state.policemen[i].get_position() == state.player.pos { return TurnResult::Caught }
+        seen = seen || state.citizens[i].sees(state.player.get_position(), &state.tilemap.tiles);
     }
     
     // commandos turn
@@ -268,14 +275,19 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
             state.commandos[i].set_position(*tile);
             if state.player.sees(*tile, &state.tilemap.tiles) {
                 render(canvas, sprites, state);
-                std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
             }
         }
         
-        if state.commandos[i].get_position() == state.player.pos {turn_res = TurnResult::Caught;}
+        if state.commandos[i].get_position() == state.player.pos { return TurnResult::Caught }
+        seen = seen || state.citizens[i].sees(state.player.get_position(), &state.tilemap.tiles);
     }
     
-    turn_res
+    if seen { 
+        return TurnResult::Detected;
+    }
+    else { 
+        return TurnResult::OK;
+    }
 }
 
 struct Drawable {
@@ -481,4 +493,6 @@ fn render(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, sta
         tex.set_color_mod(255, 255, 255);
     }
     canvas.present();
+    std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
+    state.seen_timer = (state.seen_timer - FRAME_DURATION as i32).max(0);
 } 

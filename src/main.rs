@@ -80,6 +80,8 @@ fn main() -> Result<(), String> {
                         splash::show_splash(&mut canvas, &texture_creator, &mut event_pump, &mut font, "You Died".to_string(), 0.75, 4500);
                     },
                     GameResult::Victory => {
+                        music_mixer.stop_music();
+                        music_mixer.play_effect("win");
                         i += 1;
                         if i == n{
                             splash::show_splash(&mut canvas, &texture_creator, &mut event_pump, &mut font, "Congratulations you won!".to_string(), 0.75, 4500);
@@ -95,6 +97,7 @@ fn main() -> Result<(), String> {
                         else {
                             splash::show_splash(&mut canvas, &texture_creator, &mut event_pump, &mut font, "You escaped!".to_string(), 0.75, 2500);
                         }
+                        music_mixer.play_song("slow");
                     }
                 }
             }
