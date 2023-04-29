@@ -238,8 +238,10 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
         let state_copy = state.clone();
         for tile in state.citizens[i].turn(&state_copy).iter() {
             state.citizens[i].set_position(*tile);
-            render(canvas, sprites, state);
-            std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
+            if state.player.sees(*tile, &state.tilemap.tiles) {
+                render(canvas, sprites, state);
+                std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
+            }
         }
     }
     
@@ -249,8 +251,10 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
         let state_copy = state.clone();
         for tile in state.policemen[i].turn(&state_copy).iter() {
             state.policemen[i].set_position(*tile);
-            render(canvas, sprites, state);
-            std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
+            if state.player.sees(*tile, &state.tilemap.tiles) {
+                render(canvas, sprites, state);
+                std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
+            }
         }
         
         if state.policemen[i].get_position() == state.player.pos {turn_res = TurnResult::Caught;}
@@ -262,8 +266,10 @@ fn play_turn(canvas: &mut WindowCanvas, sprites: &mut HashMap<String, Texture>, 
         let state_copy = state.clone();
         for tile in state.commandos[i].turn(&state_copy).iter() {
             state.commandos[i].set_position(*tile);
-            render(canvas, sprites, state);
-            std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
+            if state.player.sees(*tile, &state.tilemap.tiles) {
+                render(canvas, sprites, state);
+                std::thread::sleep(std::time::Duration::from_millis(FRAME_DURATION));
+            }
         }
         
         if state.commandos[i].get_position() == state.player.pos {turn_res = TurnResult::Caught;}
