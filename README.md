@@ -1,5 +1,7 @@
 # Pipaluk
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/92df916caab042f7bbc49bfa17fe51a8)](https://app.codacy.com/gh/matf-pp/2023_Pipaluk/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+
 A game about a cat named Pipaluk trying to find a way out of a long dead city of hopeless robots.
 
 <p float="left" align="middle">
