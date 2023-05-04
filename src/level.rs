@@ -3,7 +3,7 @@ use sdl2::pixels::Color;
 use sdl2::render::{ WindowCanvas, TextureCreator, Texture};
 use sdl2::image::LoadTexture;
 use sdl2::ttf::Font;
-use sdl2::video::WindowContext;
+use sdl2::video::{WindowContext, FullscreenType};
 use sdl2::rect::Rect;
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
@@ -176,6 +176,12 @@ pub fn play_level(
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..} => { return GameResult::Quit },
+                Event::KeyDown { keycode: Some(Keycode::F11), ..} => {
+                    match canvas.window().fullscreen_state() {
+                        FullscreenType::Off => { canvas.window_mut().set_fullscreen(FullscreenType::True).unwrap() },
+                        _ => { canvas.window_mut().set_fullscreen(FullscreenType::Off).unwrap() }
+                    }
+                },
                 Event::KeyDown {keycode: Some(Keycode::Escape), ..} => { return GameResult::Menu },
                 Event::MouseButtonDown { mouse_btn: MouseButton::Left, ..} => {
                     match play_turn(canvas, &mut sprites, &mut state) {

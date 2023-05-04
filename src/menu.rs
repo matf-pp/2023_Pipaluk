@@ -7,7 +7,7 @@ use sdl2::EventPump;
 use sdl2::pixels::Color;
 use sdl2::render::{ WindowCanvas, TextureCreator};
 use sdl2::image::LoadTexture;
-use sdl2::video::WindowContext;
+use sdl2::video::{WindowContext, FullscreenType};
 use sdl2::rect::{Rect, Point};
 use sdl2::event::Event;
 
@@ -165,6 +165,12 @@ pub fn show_menu(
             match event {
                 Event::Quit {..}
                 | Event::KeyDown { keycode: Some(Keycode::Escape), ..} => { return MenuAction::Quit },
+                Event::KeyDown { keycode: Some(Keycode::F11), ..} => {
+                    match canvas.window().fullscreen_state() {
+                        FullscreenType::Off => { canvas.window_mut().set_fullscreen(FullscreenType::True).unwrap() },
+                        _ => { canvas.window_mut().set_fullscreen(FullscreenType::Off).unwrap() }
+                    }
+                },
                 Event::MouseButtonDown { x, y, .. } => {
                     for i in 0..buttons.len() {
                         if buttons[i].enabled && buttons[i].rect(scale).contains_point(Point::new(x, y)) {
@@ -172,7 +178,7 @@ pub fn show_menu(
                             return buttons[i].action;
                         }
                     }
-                }
+                },
                 _ => {}
             }
         }

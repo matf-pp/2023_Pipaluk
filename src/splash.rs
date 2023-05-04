@@ -1,10 +1,11 @@
 extern crate sdl2;
 
+use sdl2::keyboard::Keycode;
 use sdl2::ttf::Font;
 use sdl2::EventPump;
 use sdl2::pixels::Color;
 use sdl2::render::{ WindowCanvas, TextureCreator};
-use sdl2::video::WindowContext;
+use sdl2::video::{WindowContext, FullscreenType};
 use sdl2::rect::Rect;
 use sdl2::event::Event;
 
@@ -39,6 +40,12 @@ pub fn show_splash(
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..} => { return SplashResult::Quit },
+                Event::KeyDown { keycode: Some(Keycode::F11), ..} => {
+                    match canvas.window().fullscreen_state() {
+                        FullscreenType::Off => { canvas.window_mut().set_fullscreen(FullscreenType::True).unwrap() },
+                        _ => { canvas.window_mut().set_fullscreen(FullscreenType::Off).unwrap() }
+                    }
+                },
                 Event::KeyDown {..}
                 | Event::MouseButtonDown {..} => { return SplashResult::Ok },
                 _ => {}
